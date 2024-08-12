@@ -1,24 +1,22 @@
 import React, { useState } from "react";
-import { Dialog, Transition } from "@headlessui/react";
 import {
-  ChevronDownIcon,
-  PlusIcon,
-  XIcon,
-  MenuIcon,
-  SearchIcon,
-  UserIcon,
-  BadgeCheckIcon,
-} from "@heroicons/react/outline";
-import {
-  TextField,
-  Button,
-  Pagination,
+  Dialog,
   Breadcrumbs,
   Avatar,
   Badge,
   Chip,
   Tooltip,
-} from "@mui/material"; // Ensure you have @mui/material installed
+} from "@mui/material";
+import { Button, TextField, Pagination } from "@mui/material";
+import {
+  ChevronDown as ChevronDownIcon,
+  Plus as PlusIcon,
+  X as XIcon,
+  Menu as MenuIcon,
+  Search as SearchIcon,
+  User as UserIcon,
+  BadgeCheck as BadgeCheckIcon,
+} from "@mui/icons-material";
 
 function App() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -131,7 +129,7 @@ function App() {
                 <Button
                   variant="contained"
                   color="primary"
-                  startIcon={<PlusIcon className="h-5 w-5" />}
+                  startIcon={<PlusIcon />}
                 >
                   With Icon
                 </Button>
@@ -140,7 +138,7 @@ function App() {
                   color="secondary"
                   className="fixed right-4 bottom-4"
                 >
-                  <PlusIcon className="h-5 w-5" />
+                  <PlusIcon />
                 </Button>
               </div>
             </div>
@@ -264,165 +262,75 @@ function App() {
                 >
                   Settings
                 </button>
-                <button
-                  onClick={() => setBottomNavValue("help")}
-                  className={`p-2 rounded ${
-                    bottomNavValue === "help"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-200"
-                  }`}
-                >
-                  Help
-                </button>
               </div>
-              <div>
-                <Breadcrumbs
-                  separator={
-                    <ChevronDownIcon className="h-5 w-5 text-gray-600" />
-                  }
-                  aria-label="breadcrumb"
-                >
-                  <a href="#" className="text-blue-500">
-                    Home
-                  </a>
-                  <a href="#" className="text-blue-500">
-                    Projects
-                  </a>
-                  <span className="text-gray-500">Current Page</span>
-                </Breadcrumbs>
-              </div>
-              <div>
-                <Pagination count={10} color="primary" />
-              </div>
-              <div>
-                <div className="flex justify-end">
-                  <button
-                    onClick={() => setDialogOpen(true)}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-300"
-                  >
-                    Open Dialog
-                  </button>
-                </div>
-                <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
-                  <div className="bg-white p-6 rounded-lg shadow-md">
-                    <h3 className="text-xl font-semibold mb-4">
-                      {dialogTitle}
-                    </h3>
-                    <p className="mb-4">This is a dialog content.</p>
-                    <button
-                      onClick={() => setDialogOpen(false)}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-300"
-                    >
-                      Close
-                    </button>
-                  </div>
-                </Dialog>
-              </div>
+              <Breadcrumbs
+                separator={
+                  <ChevronDownIcon className="h-5 w-5 text-gray-600" />
+                }
+                aria-label="breadcrumb"
+              >
+                <a href="#" className="text-blue-500">
+                  Home
+                </a>
+                <a href="#" className="text-blue-500">
+                  Projects
+                </a>
+                <span className="text-gray-500">Current Page</span>
+              </Breadcrumbs>
+              <Pagination count={10} color="primary" />
             </div>
           </section>
 
           <section className="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h2 className="text-2xl font-bold mb-4">Cards & Paper</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <h3 className="text-xl font-semibold mb-2">Card Title</h3>
-                <p className="mb-4">Card content goes here.</p>
-                <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-300">
-                  Action
-                </button>
-              </div>
-              <div className="bg-gray-200 p-6 rounded-lg shadow-md">
-                <h3 className="text-xl font-semibold mb-2">Paper Title</h3>
-                <p className="mb-4">Paper content goes here.</p>
-                <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-300">
-                  Action
-                </button>
-              </div>
-            </div>
-          </section>
-
-          <section className="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h2 className="text-2xl font-bold mb-4">Data Tables</h2>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead>
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Name
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Email
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Role
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  <tr>
-                    <td className="px-6 py-4 whitespace-nowrap">John Doe</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      john.doe@example.com
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">Admin</td>
-                  </tr>
-                  <tr>
-                    <td className="px-6 py-4 whitespace-nowrap">Jane Smith</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      jane.smith@example.com
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">User</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <section className="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h2 className="text-2xl font-bold mb-4">Avatar & Badges</h2>
-            <div className="flex space-x-4 items-center">
-              <Avatar
-                alt="User Avatar"
-                src="/path/to/avatar.jpg"
-                className="h-16 w-16"
-              />
-              <Badge badgeContent={4} color="primary">
-                <UserIcon className="h-16 w-16 text-gray-500" />
-              </Badge>
-              <Chip label="Chip Label" color="primary" />
-            </div>
-          </section>
-
-          <section className="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h2 className="text-2xl font-bold mb-4">Alerts & Progress</h2>
+            <h2 className="text-2xl font-bold mb-4">Dialogs & Alerts</h2>
             <div className="space-y-4">
-              <div className="p-4 bg-red-100 border border-red-300 text-red-800 rounded-lg">
+              <div className="flex justify-end">
+                <Button
+                  onClick={() => setDialogOpen(true)}
+                  variant="contained"
+                  color="primary"
+                >
+                  Open Dialog
+                </Button>
+              </div>
+              <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
+                <div className="bg-white p-6 rounded-lg shadow-md">
+                  <h3 className="text-xl font-semibold mb-4">{dialogTitle}</h3>
+                  <p className="mb-4">This is a dialog content.</p>
+                  <Button
+                    onClick={() => setDialogOpen(false)}
+                    variant="contained"
+                    color="secondary"
+                  >
+                    Close
+                  </Button>
+                </div>
+              </Dialog>
+              <div className="bg-red-100 p-4 rounded-lg border border-red-300 text-red-800">
                 <p className="text-sm font-medium">Error Alert</p>
               </div>
-              <div className="p-4 bg-yellow-100 border border-yellow-300 text-yellow-800 rounded-lg">
+              <div className="bg-yellow-100 p-4 rounded-lg border border-yellow-300 text-yellow-800">
                 <p className="text-sm font-medium">Warning Alert</p>
               </div>
-              <div className="p-4 bg-green-100 border border-green-300 text-green-800 rounded-lg">
+              <div className="bg-green-100 p-4 rounded-lg border border-green-300 text-green-800">
                 <p className="text-sm font-medium">Success Alert</p>
               </div>
-              <div>
-                <div className="relative pt-1">
-                  <div className="flex mb-2 items-center justify-between">
-                    <div className="text-xs font-semibold inline-block py-1 px-2 rounded text-blue-600 bg-blue-200">
-                      Progress
-                    </div>
+              <div className="relative pt-1">
+                <div className="flex mb-2 items-center justify-between">
+                  <div className="text-xs font-semibold inline-block py-1 px-2 rounded text-blue-600 bg-blue-200">
+                    Progress
                   </div>
-                  <div className="flex">
-                    <div className="relative flex-grow w-full bg-gray-200 rounded">
-                      <div
-                        className="absolute top-0 left-0 h-full bg-blue-600 rounded"
-                        style={{ width: "50%" }}
-                      />
-                    </div>
-                    <span className="text-xs font-semibold inline-block px-2 py-1 rounded text-blue-600 bg-blue-200 ml-2">
-                      50%
-                    </span>
+                </div>
+                <div className="flex">
+                  <div className="relative flex-grow w-full bg-gray-200 rounded">
+                    <div
+                      className="absolute top-0 left-0 h-full bg-blue-600 rounded"
+                      style={{ width: "50%" }}
+                    />
                   </div>
+                  <span className="text-xs font-semibold inline-block px-2 py-1 rounded text-blue-600 bg-blue-200 ml-2">
+                    50%
+                  </span>
                 </div>
               </div>
             </div>
@@ -432,9 +340,9 @@ function App() {
             <h2 className="text-2xl font-bold mb-4">Tooltips & Skeletons</h2>
             <div className="space-y-4">
               <Tooltip title="Tooltip Content" arrow>
-                <button className="px-4 py-2 bg-blue-500 text-white rounded-lg">
+                <Button variant="contained" color="primary">
                   Hover me
-                </button>
+                </Button>
               </Tooltip>
               <div className="bg-gray-200 p-6 rounded-lg">
                 <div className="animate-pulse flex space-x-4">
