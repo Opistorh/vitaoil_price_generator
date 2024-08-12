@@ -3,6 +3,22 @@ import React, { useState } from "react";
 
 function App() {
   const [isModalOpen, setModalOpen] = useState(false);
+  const [isToggleOn, setToggleOn] = useState(false);
+  const [selectedOption, setSelectedOption] = useState("");
+  const [isLoading, setLoading] = useState(false);
+
+  const handleToggle = () => {
+    setToggleOn(!isToggleOn);
+  };
+
+  const handleSelectChange = (e) => {
+    setSelectedOption(e.target.value);
+  };
+
+  const handleLoading = () => {
+    setLoading(true);
+    setTimeout(() => setLoading(false), 2000);
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
@@ -90,6 +106,75 @@ function App() {
               </div>
             </div>
           )}
+        </section>
+
+        {/* Toggle Switch Example */}
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+            Toggle Switch
+          </h2>
+          <div className="flex items-center space-x-4">
+            <span className="text-gray-700">
+              Toggle is {isToggleOn ? "On" : "Off"}
+            </span>
+            <button
+              onClick={handleToggle}
+              className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors ${
+                isToggleOn ? "bg-blue-500" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`bg-white w-6 h-6 rounded-full shadow-md transform transition-transform ${
+                  isToggleOn ? "translate-x-6" : ""
+                }`}
+              ></div>
+            </button>
+          </div>
+        </section>
+
+        {/* Dropdown Selector Example */}
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+            Dropdown Selector
+          </h2>
+          <div className="relative inline-block w-64">
+            <select
+              value={selectedOption}
+              onChange={handleSelectChange}
+              className="block appearance-none w-full bg-white border border-gray-300 hover:border-gray-500 px-4 py-2 pr-8 rounded-lg shadow leading-tight focus:outline-none focus:shadow-outline"
+            >
+              <option value="">Select an option</option>
+              <option value="option1">Option 1</option>
+              <option value="option2">Option 2</option>
+              <option value="option3">Option 3</option>
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+              <svg
+                className="fill-current h-4 w-4"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+              >
+                <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+              </svg>
+            </div>
+          </div>
+        </section>
+
+        {/* Spinner Example */}
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Spinner</h2>
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={handleLoading}
+              className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
+            >
+              {isLoading ? (
+                <div className="loader ease-linear rounded-full border-4 border-t-4 border-white h-6 w-6"></div>
+              ) : (
+                "Load Data"
+              )}
+            </button>
+          </div>
         </section>
 
         {/* Form Example */}
