@@ -9,7 +9,16 @@ import {
   UserIcon,
   BadgeCheckIcon,
 } from "@heroicons/react/outline";
-import { TextField, Button, Pagination } from "@mui/material"; // Ensure you have @mui/material installed
+import {
+  TextField,
+  Button,
+  Pagination,
+  Breadcrumbs,
+  Avatar,
+  Badge,
+  Chip,
+  Tooltip,
+} from "@mui/material"; // Ensure you have @mui/material installed
 
 function App() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -126,7 +135,11 @@ function App() {
                 >
                   With Icon
                 </Button>
-                <Button variant="fab" color="secondary">
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  className="fixed right-4 bottom-4"
+                >
                   <PlusIcon className="h-5 w-5" />
                 </Button>
               </div>
