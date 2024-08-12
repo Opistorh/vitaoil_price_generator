@@ -1,6 +1,5 @@
-// src/App.js
 import React, { useState } from "react";
-import { MenuIcon, BellIcon, SearchIcon } from "@heroicons/react/outline";
+import { Bars3Icon } from "@heroicons/react/24/outline";
 
 function App() {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -14,9 +13,9 @@ function App() {
         } md:block`}
       >
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-white">Info System</h1>
+          <h1 className="text-2xl font-bold text-white">Defengate</h1>
           <button className="md:hidden" onClick={() => setSidebarOpen(false)}>
-            <MenuIcon className="h-6 w-6 text-white" />
+            <Bars3Icon className="h-6 w-6 text-white" />
           </button>
         </div>
         <nav>
@@ -26,7 +25,7 @@ function App() {
                 href="#"
                 className="flex items-center text-white hover:bg-gray-700 p-2 rounded-lg"
               >
-                <span className="ml-3">Dashboard</span>
+                <span className="ml-3">WAF</span>
               </a>
             </li>
             <li>
@@ -34,7 +33,7 @@ function App() {
                 href="#"
                 className="flex items-center text-white hover:bg-gray-700 p-2 rounded-lg"
               >
-                <span className="ml-3">Users</span>
+                <span className="ml-3">AntiDDoS</span>
               </a>
             </li>
             <li>
@@ -42,7 +41,7 @@ function App() {
                 href="#"
                 className="flex items-center text-white hover:bg-gray-700 p-2 rounded-lg"
               >
-                <span className="ml-3">Reports</span>
+                <span className="ml-3">CDN</span>
               </a>
             </li>
             <li>
@@ -50,7 +49,7 @@ function App() {
                 href="#"
                 className="flex items-center text-white hover:bg-gray-700 p-2 rounded-lg"
               >
-                <span className="ml-3">Settings</span>
+                <span className="ml-3">Настройки ресурса</span>
               </a>
             </li>
           </ul>
@@ -61,12 +60,13 @@ function App() {
       <div className="flex-1 flex flex-col">
         <header className="flex items-center justify-between bg-dark-card p-4 shadow-md">
           <button className="md:hidden" onClick={() => setSidebarOpen(true)}>
-            <MenuIcon className="h-6 w-6 text-white" />
+            <Bars3Icon className="h-6 w-6 text-white" />
           </button>
           <h2 className="text-xl font-bold text-white">Dashboard</h2>
           <div className="flex items-center space-x-4">
-            <SearchIcon className="h-6 w-6 text-white" />
-            <BellIcon className="h-6 w-6 text-white" />
+            {/* Replace the icons as per your needs */}
+            <Bars3Icon className="h-6 w-6 text-white" />
+            <Bars3Icon className="h-6 w-6 text-white" />
           </div>
         </header>
 
