@@ -127,159 +127,115 @@ function App() {
           </div>
         </header>
 
-        <main className="p-4 flex-1">
-          {/* Stats Cards */}
-          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {['Total Users', 'Sales', 'New Signups', 'Active Sessions'].map((title, index) => (
-              <div key={index} className="bg-dark-card p-6 rounded-lg shadow-md transition-transform transform hover:scale-105">
-                <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
-                <p className="text-2xl font-bold text-white">{index === 0 ? '12,345' : index === 1 ? '$34,567' : index === 2 ? '456' : '789'}</p>
-              </div>
-            ))}
-          </section>
+        <main className="flex-1">
+  <div className="p-6">
+    {/* Form Section */}
+    <section className="bg-dark-card p-6 rounded-lg shadow-md mb-8">
+      <h2 className="text-2xl font-bold text-white mb-4">Add User</h2>
+      <form onSubmit={handleFormSubmit} className="space-y-4">
+        <div>
+          <label className="block text-gray-400 mb-2">Name</label>
+          <TextField
+            name="name"
+            value={formData.name}
+            onChange={handleInputChange}
+            variant="outlined"
+            className="w-full bg-dark-bg text-white"
+            placeholder="Enter name"
+          />
+        </div>
+        <div>
+          <label className="block text-gray-400 mb-2">Email</label>
+          <TextField
+            name="email"
+            value={formData.email}
+            onChange={handleInputChange}
+            variant="outlined"
+            className="w-full bg-dark-bg text-white"
+            placeholder="Enter email"
+          />
+        </div>
+        <div>
+          <label className="block text-gray-400 mb-2">Role</label>
+          <TextField
+            name="role"
+            value={formData.role}
+            onChange={handleInputChange}
+            variant="outlined"
+            className="w-full bg-dark-bg text-white"
+            placeholder="Enter role"
+          />
+        </div>
+        <button
+          type="submit"
+          className={`w-full px-4 py-2 rounded-lg ${loading ? 'bg-gray-500 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'} text-white transition-colors duration-300`}
+          disabled={loading}
+        >
+          {loading ? 'Adding User...' : 'Add User'}
+        </button>
+      </form>
+    </section>
 
-          {/* User Table */}
-          <section className="bg-dark-card p-6 rounded-lg shadow-md mb-8">
-            <h3 className="text-xl font-semibold text-white mb-4">User List</h3>
-            {loading ? (
-              <div className="flex items-center justify-center h-48">
-                <svg className="w-8 h-8 text-white animate-spin" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v8H4zm16 0a8 8 0 0 0-8 8v-8h8z"></path>
-                </svg>
-              </div>
-            ) : (
-              <DataGrid
-                rows={users}
-                columns={[
-                  { field: 'name', headerName: 'Name', width: 150 },
-                  { field: 'email', headerName: 'Email', width: 200 },
-                  { field: 'role', headerName: 'Role', width: 150 },
-                  { field: 'status', headerName: 'Status', width: 150 },
-                ]}
-                pageSize={5}
-                rowsPerPageOptions={[5]}
-              />
-            )}
-            <Pagination
-              count={Math.ceil(users.length / 5)}
-              page={paginationPage}
-              onChange={(event, page) => setPaginationPage(page)}
-              className="mt-4"
-            />
-          </section>
-
-          {/* Form Example */}
-          <section className="bg-dark-card p-6 rounded-lg shadow-md mb-8">
-            <h3 className="text-xl font-semibold text-white mb-4">Add New User</h3>
-            <form className="space-y-4" onSubmit={handleFormSubmit}>
-              <div>
-                <label className="block text-gray-400 mb-2">Name</label>
-                <TextField
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  variant="outlined"
-                  className="w-full bg-dark-bg text-white"
-                  placeholder="Enter name"
-                />
-              </div>
-              <div>
-                <label className="block text-gray-400 mb-2">Email</label>
-                <TextField
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  variant="outlined"
-                  className="w-full bg-dark-bg text-white"
-                  placeholder="Enter email"
-                />
-              </div>
-              <div>
-                <label className="block text-gray-400 mb-2">Role</label>
-                <TextField
-                  name="role"
-                  value={formData.role}
-                  onChange={handleInputChange}
-                  variant="outlined"
-                  className="w-full bg-dark-bg text-white"
-                  placeholder="Enter role"
-                />
-              </div>
-              <button
-                type="submit"
-                className={`w-full px-4 py-2 rounded-lg ${loading ? 'bg-gray-500 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'} text-white transition-colors duration-300`}
-                disabled={loading}
-              >
-                {loading ? 'Adding User...' : 'Add User'}
-              </button>
-            </form>
-          </section>
-
-          {/* Notifications Example */}
-          <section className="bg-dark-card p-6 rounded-lg shadow-md mb-8">
-            <h3 className="text-xl font-semibold text-white mb-4">Notifications</h3>
-            <div className="space-y-4">
-              {notifications.map((notification, index) => (
-                <Transition
-                  key={index}
-                  show={true}
-                  enter="transition-opacity duration-300"
-                  enterFrom="opacity-0"
-                  enterTo="opacity-100"
-                  leave="transition-opacity duration-300"
-                  leaveFrom="opacity-100"
-                  leaveTo="opacity-0"
-                >
-                  <div
-                    className={`flex items-center justify-between p-4 rounded-lg ${notification.type === 'info' ? 'bg-blue-500' : notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white`}
-                  >
-                    <span>{notification.message}</span>
-                    <button className="text-white hover:text-gray-200" onClick={() => handleDismissNotification(index)}>
-                      <XIcon className="h-5 w-5" />
-                    </button>
-                  </div>
-                </Transition>
-              ))}
-            </div>
-          </section>
-
-          {/* Modal Example */}
-          <section className="mb-8">
-            <h3 className="text-xl font-semibold text-white mb-4">Open Modal</h3>
-            <button
-              onClick={() => setDialogOpen(true)}
-              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-300"
+    {/* Notifications Example */}
+    <section className="bg-dark-card p-6 rounded-lg shadow-md mb-8">
+      <h3 className="text-xl font-semibold text-white mb-4">Notifications</h3>
+      <div className="space-y-4">
+        {notifications.map((notification, index) => (
+          <Transition
+            key={index}
+            show={true}
+            enter="transition-opacity duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="transition-opacity duration-300"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div
+              className={`flex items-center justify-between p-4 rounded-lg ${notification.type === 'info' ? 'bg-blue-500' : notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white`}
             >
-              Open Modal
-            </button>
-            <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
-              <div className="bg-dark-card p-6 rounded-lg">
-                <h3 className="text-xl font-semibold text-white mb-4">Modal Title</h3>
-                <p className="text-gray-300 mb-4">This is a modal dialog.</p>
-                <button
-                  onClick={() => setDialogOpen(false)}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-300"
-                >
-                  Close
-                </button>
-              </div>
-            </Dialog>
-          </section>
+              <span>{notification.message}</span>
+              <button className="text-white hover:text-gray-200" onClick={() => handleDismissNotification(index)}>
+                <XIcon className="h-5 w-5" />
+              </button>
+            </div>
+          </Transition>
+        ))}
+      </div>
+    </section>
 
-          {/* Additional UI Elements */}
-          <section className="bg-dark-card p-6 rounded-lg shadow-md mb-8">
-            <h3 className="text-xl font-semibold text-white mb-4">Additional UI Elements</h3>
-            <div className="space-y-4">
-              {/* Button Group */}
-              <div>
-                <h4 className="text-lg font-semibold text-white mb-2">Button Group</h4>
-                <div className="flex space-x-2">
-                  <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-300">Button 1</button>
-                  <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-300">Button 2</button>
-                  <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-300">Button 3</button>
-                </div>
-              </div>
+    {/* Modal Example */}
+    <section className="mb-8">
+      <h3 className="text-xl font-semibold text-white mb-4">Open Modal</h3>
+      <button
+        onClick={() => setDialogOpen(true)}
+        className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-300"
+      >
+        Open Modal
+      </button>
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
+        <div className="bg-dark-card p-6 rounded-lg">
+          <h3 className="text-xl font-semibold text-white mb-4">Modal Title</h3>
+          <p className="text-gray-300 mb-4">This is a modal dialog.</p>
+          <button
+            onClick={() => setDialogOpen(false)}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-300"
+          >
+            Close
+          </button>
+        </div>
+      </Dialog>
+    </section>
+
+    {/* Additional UI Elements */}
+    <section className="bg-dark-card p-6 rounded-lg shadow-md mb-8">
+      <h3 className="text-xl font-semibold text-white mb-4">Additional UI Elements</h3>
+      <div className="space-y-4">
+        {/* Add the additional UI elements here */}
+      </div>
+    </section>
+  </div>
+</main>
 
               {/* Icon Button */}
               <div>
