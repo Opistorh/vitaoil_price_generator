@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { Bars3Icon } from "@heroicons/react/24/outline";
+import {
+  MenuIcon,
+  XIcon,
+  UserIcon,
+  GlobeIcon,
+  CogIcon,
+} from "@heroicons/react/outline";
 
 function App() {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -15,7 +21,7 @@ function App() {
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-white">Defengate</h1>
           <button className="md:hidden" onClick={() => setSidebarOpen(false)}>
-            <Bars3Icon className="h-6 w-6 text-white" />
+            <XIcon className="h-6 w-6 text-white" />
           </button>
         </div>
         <nav>
@@ -25,6 +31,7 @@ function App() {
                 href="#"
                 className="flex items-center text-white hover:bg-gray-700 p-2 rounded-lg"
               >
+                <UserIcon className="h-6 w-6 text-white" />
                 <span className="ml-3">WAF</span>
               </a>
             </li>
@@ -33,6 +40,7 @@ function App() {
                 href="#"
                 className="flex items-center text-white hover:bg-gray-700 p-2 rounded-lg"
               >
+                <GlobeIcon className="h-6 w-6 text-white" />
                 <span className="ml-3">AntiDDoS</span>
               </a>
             </li>
@@ -41,6 +49,7 @@ function App() {
                 href="#"
                 className="flex items-center text-white hover:bg-gray-700 p-2 rounded-lg"
               >
+                <CogIcon className="h-6 w-6 text-white" />
                 <span className="ml-3">CDN</span>
               </a>
             </li>
@@ -49,6 +58,7 @@ function App() {
                 href="#"
                 className="flex items-center text-white hover:bg-gray-700 p-2 rounded-lg"
               >
+                <CogIcon className="h-6 w-6 text-white" />
                 <span className="ml-3">Настройки ресурса</span>
               </a>
             </li>
@@ -60,13 +70,13 @@ function App() {
       <div className="flex-1 flex flex-col">
         <header className="flex items-center justify-between bg-dark-card p-4 shadow-md">
           <button className="md:hidden" onClick={() => setSidebarOpen(true)}>
-            <Bars3Icon className="h-6 w-6 text-white" />
+            <MenuIcon className="h-6 w-6 text-white" />
           </button>
           <h2 className="text-xl font-bold text-white">Dashboard</h2>
           <div className="flex items-center space-x-4">
-            {/* Replace the icons as per your needs */}
-            <Bars3Icon className="h-6 w-6 text-white" />
-            <Bars3Icon className="h-6 w-6 text-white" />
+            {/* Replace with other icons if needed */}
+            <CogIcon className="h-6 w-6 text-white" />
+            <CogIcon className="h-6 w-6 text-white" />
           </div>
         </header>
 
