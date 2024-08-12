@@ -8,6 +8,7 @@ import {
   RefreshIcon,
 } from "@heroicons/react/outline";
 import { Transition } from "@headlessui/react";
+import "./App.css"; // Импортируем кастомный CSS
 
 function App() {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -131,7 +132,7 @@ function App() {
               (title, index) => (
                 <div
                   key={index}
-                  className="bg-dark-card p-6 rounded-lg shadow-md transition-transform transform hover:scale-105"
+                  className="bg-dark-card p-6 rounded-lg shadow-md transform transition-transform duration-300 hover:scale-105 hover:shadow-xl"
                 >
                   <h3 className="text-lg font-semibold text-white mb-2">
                     {title}
@@ -188,7 +189,7 @@ function App() {
                   {users.map((user, index) => (
                     <tr
                       key={index}
-                      className="border-b border-dark-border transition-transform hover:bg-gray-800"
+                      className="border-b border-dark-border hover:bg-gray-800 transition-colors duration-300"
                     >
                       <td className="py-2">{user.name}</td>
                       <td className="py-2">{user.email}</td>
@@ -249,7 +250,9 @@ function App() {
                   loading
                     ? "bg-gray-500 cursor-not-allowed"
                     : "bg-blue-500 hover:bg-blue-600"
-                } text-white transition-colors duration-300`}
+                } text-white transition-colors duration-300 transform ${
+                  loading ? "" : "hover:scale-105"
+                }`}
                 disabled={loading}
               >
                 {loading ? "Adding User..." : "Add User"}
@@ -267,10 +270,10 @@ function App() {
                 <Transition
                   key={index}
                   show={true}
-                  enter="transition-opacity duration-300"
+                  enter="transition-opacity duration-500"
                   enterFrom="opacity-0"
                   enterTo="opacity-100"
-                  leave="transition-opacity duration-300"
+                  leave="transition-opacity duration-500"
                   leaveFrom="opacity-100"
                   leaveTo="opacity-0"
                 >
@@ -303,7 +306,7 @@ function App() {
             </h3>
             <button
               onClick={() => alert("Modal Opened")}
-              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-300"
+              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-300 transform hover:scale-105"
             >
               Open Modal
             </button>
