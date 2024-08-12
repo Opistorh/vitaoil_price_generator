@@ -1,26 +1,46 @@
 import React, { useState } from "react";
 import {
+  Button,
+  TextField,
   Dialog,
   Breadcrumbs,
   Avatar,
   Badge,
   Chip,
   Tooltip,
+  Pagination,
+  Slider,
+  Switch,
+  Divider,
+  Menu,
+  AppBar,
+  Toolbar,
+  IconButton,
+  Snackbar,
+  Alert,
+  CircularProgress,
+  LinearProgress,
 } from "@mui/material";
-import { Button, TextField, Pagination } from "@mui/material";
 import {
-  ChevronDown as ChevronDownIcon,
-  Plus as PlusIcon,
-  X as XIcon,
   Menu as MenuIcon,
+  Close as CloseIcon,
   Search as SearchIcon,
-  User as UserIcon,
-  BadgeCheck as BadgeCheckIcon,
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Star as StarIcon,
+  StarBorder as StarBorderIcon,
+  Home as HomeIcon,
+  Info as InfoIcon,
+  Settings as SettingsIcon,
+  Visibility as VisibilityIcon,
+  FileCopy as FileCopyIcon,
+  CalendarToday as CalendarTodayIcon,
+  Clock as ClockIcon,
 } from "@mui/icons-material";
 
 function App() {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({ name: "", email: "", role: "" });
   const [notifications, setNotifications] = useState([]);
   const [rating, setRating] = useState(0);
   const [sliderValue, setSliderValue] = useState(50);
@@ -29,6 +49,8 @@ function App() {
   const [bottomNavValue, setBottomNavValue] = useState("home");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [dialogTitle, setDialogTitle] = useState("Dialog Title");
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
@@ -36,7 +58,7 @@ function App() {
   };
 
   const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setAutocompleteValue(e.target.value);
   };
 
   const handleDismissNotification = (index) => {
@@ -45,68 +67,82 @@ function App() {
 
   return (
     <div className="bg-gray-100 min-h-screen flex flex-col">
-      <header className="bg-gray-800 p-4 shadow-md">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-white">Demo UI</h1>
-          <MenuIcon
-            className="h-6 w-6 text-white cursor-pointer"
+      <AppBar position="static" color="primary">
+        <Toolbar>
+          <IconButton
+            edge="start"
+            color="inherit"
+            aria-label="menu"
             onClick={() => setDrawerOpen(true)}
-          />
-        </div>
-      </header>
+          >
+            <MenuIcon />
+          </IconButton>
+          <h1 className="text-2xl font-bold text-white">Demo UI</h1>
+        </Toolbar>
+      </AppBar>
+
       <div className="flex flex-1">
-        <aside
-          className={`fixed inset-0 bg-gray-800 bg-opacity-75 transition-transform transform ${
-            drawerOpen ? "translate-x-0" : "-translate-x-full"
-          } z-50`}
+        <Drawer
+          anchor="left"
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
         >
-          <div className="w-64 bg-gray-800 p-4 space-y-4">
-            <button className="text-white">Dashboard</button>
-            <button className="text-white">Projects</button>
-            <button className="text-white">Settings</button>
-            <button className="text-white">Help</button>
-            <button
-              onClick={() => setDrawerOpen(false)}
-              className="text-white absolute top-4 right-4"
-            >
-              <XIcon className="h-6 w-6" />
-            </button>
+          <div className="w-64 bg-gray-800 text-white p-4">
+            <IconButton onClick={() => setDrawerOpen(false)} className="mb-4">
+              <CloseIcon />
+            </IconButton>
+            <div>
+              <Button
+                onClick={() => setBottomNavValue("home")}
+                color={bottomNavValue === "home" ? "secondary" : "inherit"}
+                startIcon={<HomeIcon />}
+              >
+                Home
+              </Button>
+              <Button
+                onClick={() => setBottomNavValue("info")}
+                color={bottomNavValue === "info" ? "secondary" : "inherit"}
+                startIcon={<InfoIcon />}
+              >
+                Info
+              </Button>
+              <Button
+                onClick={() => setBottomNavValue("settings")}
+                color={bottomNavValue === "settings" ? "secondary" : "inherit"}
+                startIcon={<SettingsIcon />}
+              >
+                Settings
+              </Button>
+            </div>
           </div>
-        </aside>
+        </Drawer>
+
         <main className="flex-1 p-6">
           <section className="bg-white p-6 rounded-lg shadow-md mb-8">
             <h2 className="text-2xl font-bold mb-4">Forms</h2>
             <form onSubmit={handleFormSubmit} className="space-y-4">
-              <div>
-                <TextField
-                  label="Name"
-                  variant="outlined"
-                  fullWidth
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  name="name"
-                />
-              </div>
-              <div>
-                <TextField
-                  label="Email"
-                  variant="outlined"
-                  fullWidth
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  name="email"
-                />
-              </div>
-              <div>
-                <TextField
-                  label="Role"
-                  variant="outlined"
-                  fullWidth
-                  value={formData.role}
-                  onChange={handleInputChange}
-                  name="role"
-                />
-              </div>
+              <TextField
+                label="Name"
+                variant="outlined"
+                fullWidth
+                name="name"
+                required
+              />
+              <TextField
+                label="Email"
+                variant="outlined"
+                fullWidth
+                name="email"
+                type="email"
+                required
+              />
+              <TextField
+                label="Role"
+                variant="outlined"
+                fullWidth
+                name="role"
+                required
+              />
               <Button type="submit" variant="contained" color="primary">
                 Submit
               </Button>
@@ -114,115 +150,59 @@ function App() {
           </section>
 
           <section className="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h2 className="text-2xl font-bold mb-4">Buttons</h2>
-            <div className="space-y-4">
-              <Button variant="contained" color="primary">
-                Primary Button
-              </Button>
-              <Button variant="outlined" color="secondary">
-                Outlined Button
-              </Button>
-              <Button variant="text" color="default">
-                Text Button
-              </Button>
-              <div className="flex space-x-2">
-                <Button
-                  variant="contained"
-                  color="primary"
-                  startIcon={<PlusIcon />}
-                >
-                  With Icon
-                </Button>
-                <Button
-                  variant="contained"
-                  color="secondary"
-                  className="fixed right-4 bottom-4"
-                >
-                  <PlusIcon />
-                </Button>
-              </div>
-            </div>
-          </section>
-
-          <section className="bg-white p-6 rounded-lg shadow-md mb-8">
             <h2 className="text-2xl font-bold mb-4">Interactive Elements</h2>
             <div className="space-y-4">
               <div>
                 <label className="block text-gray-700 mb-2">Checkbox</label>
-                <input
-                  type="checkbox"
-                  className="form-checkbox h-5 w-5 text-blue-600"
-                />
+                <Checkbox />
               </div>
               <div>
                 <label className="block text-gray-700 mb-2">Radio</label>
-                <input
-                  type="radio"
-                  name="radio"
-                  className="form-radio h-5 w-5 text-blue-600"
-                />{" "}
-                Option 1
-                <input
-                  type="radio"
-                  name="radio"
-                  className="form-radio h-5 w-5 text-blue-600 ml-4"
-                />{" "}
-                Option 2
+                <FormControlLabel control={<Radio />} label="Option 1" />
+                <FormControlLabel control={<Radio />} label="Option 2" />
               </div>
               <div>
                 <label className="block text-gray-700 mb-2">Rating</label>
-                <div className="flex">
-                  {[1, 2, 3, 4, 5].map((value) => (
-                    <button
-                      key={value}
-                      onClick={() => setRating(value)}
-                      className={`h-6 w-6 ${
-                        rating >= value ? "text-yellow-400" : "text-gray-300"
-                      }`}
-                    >
-                      &#9733;
-                    </button>
-                  ))}
-                </div>
+                <Rating
+                  name="rating"
+                  value={rating}
+                  onChange={(event, newValue) => setRating(newValue)}
+                  icon={<StarIcon />}
+                  emptyIcon={<StarBorderIcon />}
+                />
               </div>
               <div>
                 <label className="block text-gray-700 mb-2">Slider</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
+                <Slider
                   value={sliderValue}
-                  onChange={(e) => setSliderValue(e.target.value)}
-                  className="w-full"
+                  onChange={(event, newValue) => setSliderValue(newValue)}
+                  aria-labelledby="continuous-slider"
                 />
               </div>
               <div>
                 <label className="block text-gray-700 mb-2">Switch</label>
-                <input
-                  type="checkbox"
+                <Switch
                   checked={switchChecked}
                   onChange={() => setSwitchChecked(!switchChecked)}
-                  className="form-switch h-5 w-10 text-blue-600"
                 />
               </div>
               <div>
                 <label className="block text-gray-700 mb-2">Autocomplete</label>
-                <input
-                  type="text"
+                <TextField
                   value={autocompleteValue}
-                  onChange={(e) => setAutocompleteValue(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded"
-                  placeholder="Type to autocomplete..."
+                  onChange={handleInputChange}
+                  placeholder="Type to autocomplete"
                 />
               </div>
               <div>
                 <label className="block text-gray-700 mb-2">
                   Multiline Input
                 </label>
-                <textarea
-                  rows="4"
-                  className="w-full p-2 border border-gray-300 rounded"
+                <TextField
+                  multiline
+                  rows={4}
                   placeholder="Type your text here..."
+                  fullWidth
                 />
               </div>
             </div>
@@ -231,51 +211,35 @@ function App() {
           <section className="bg-white p-6 rounded-lg shadow-md mb-8">
             <h2 className="text-2xl font-bold mb-4">Navigation</h2>
             <div className="space-y-4">
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => setBottomNavValue("home")}
-                  className={`p-2 rounded ${
-                    bottomNavValue === "home"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-200"
-                  }`}
-                >
-                  Home
-                </button>
-                <button
-                  onClick={() => setBottomNavValue("projects")}
-                  className={`p-2 rounded ${
-                    bottomNavValue === "projects"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-200"
-                  }`}
-                >
-                  Projects
-                </button>
-                <button
-                  onClick={() => setBottomNavValue("settings")}
-                  className={`p-2 rounded ${
-                    bottomNavValue === "settings"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-200"
-                  }`}
-                >
-                  Settings
-                </button>
-              </div>
-              <Breadcrumbs
-                separator={
-                  <ChevronDownIcon className="h-5 w-5 text-gray-600" />
-                }
-                aria-label="breadcrumb"
+              <BottomNavigation
+                showLabels
+                value={bottomNavValue}
+                onChange={(event, newValue) => setBottomNavValue(newValue)}
               >
-                <a href="#" className="text-blue-500">
+                <BottomNavigationAction
+                  label="Home"
+                  value="home"
+                  icon={<HomeIcon />}
+                />
+                <BottomNavigationAction
+                  label="Info"
+                  value="info"
+                  icon={<InfoIcon />}
+                />
+                <BottomNavigationAction
+                  label="Settings"
+                  value="settings"
+                  icon={<SettingsIcon />}
+                />
+              </BottomNavigation>
+              <Breadcrumbs aria-label="breadcrumb">
+                <Link href="#" color="inherit">
                   Home
-                </a>
-                <a href="#" className="text-blue-500">
+                </Link>
+                <Link href="#" color="inherit">
                   Projects
-                </a>
-                <span className="text-gray-500">Current Page</span>
+                </Link>
+                <Typography color="textPrimary">Current Page</Typography>
               </Breadcrumbs>
               <Pagination count={10} color="primary" />
             </div>
@@ -306,6 +270,18 @@ function App() {
                   </Button>
                 </div>
               </Dialog>
+              <Snackbar
+                open={openSnackbar}
+                autoHideDuration={6000}
+                onClose={() => setOpenSnackbar(false)}
+              >
+                <Alert
+                  onClose={() => setOpenSnackbar(false)}
+                  severity="success"
+                >
+                  This is a success message!
+                </Alert>
+              </Snackbar>
               <div className="bg-red-100 p-4 rounded-lg border border-red-300 text-red-800">
                 <p className="text-sm font-medium">Error Alert</p>
               </div>
