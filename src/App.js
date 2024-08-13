@@ -73,8 +73,12 @@ function App() {
   };
 
   return (
-    <div className="bg-gray-100 min-h-screen flex flex-col">
-      <AppBar position="static" color="primary">
+    <div className="bg-gray-50 min-h-screen flex flex-col">
+      <AppBar
+        position="static"
+        color="white"
+        className="shadow-md border-b border-gray-200"
+      >
         <Toolbar>
           <IconButton
             edge="start"
@@ -84,18 +88,24 @@ function App() {
           >
             <MenuIcon />
           </IconButton>
-          <h1 className="text-2xl font-bold text-white">Demo UI</h1>
+          <Typography
+            variant="h6"
+            className="flex-grow text-center font-semibold"
+          >
+            Demo UI
+          </Typography>
         </Toolbar>
       </AppBar>
 
       <div className="flex flex-1">
         <main className="flex-1 p-6">
-          <section className="bg-white p-6 rounded-lg shadow-md mb-8">
+          <section className="bg-white p-6 rounded-xl shadow-md mb-8">
             <h2 className="text-2xl font-bold mb-4">Tabs & Switches</h2>
             <Tabs
               value={activeTab}
               onChange={handleTabChange}
               aria-label="tabs example"
+              centered
             >
               <Tab label="Tab 1" />
               <Tab label="Tab 2" />
@@ -107,8 +117,8 @@ function App() {
               {activeTab === 2 && <div>Content for Tab 3</div>}
             </div>
             <Divider className="my-6" />
-            <div>
-              <label className="block text-gray-700 mb-2">Switch</label>
+            <div className="flex items-center space-x-4">
+              <Typography className="text-gray-700">Switch</Typography>
               <Switch
                 checked={switchChecked}
                 onChange={() => setSwitchChecked(!switchChecked)}
@@ -116,7 +126,7 @@ function App() {
             </div>
           </section>
 
-          <section className="bg-white p-6 rounded-lg shadow-md mb-8">
+          <section className="bg-white p-6 rounded-xl shadow-md mb-8">
             <h2 className="text-2xl font-bold mb-4">Accordions & Alerts</h2>
             <Accordion
               expanded={accordionOpen}
@@ -134,14 +144,20 @@ function App() {
               </AccordionDetails>
             </Accordion>
             <Divider className="my-6" />
-            <Alert severity="info">This is an informational alert!</Alert>
-            <Alert severity="error">This is an error alert!</Alert>
-            <Alert severity="success">This is a success alert!</Alert>
+            <Alert severity="info" variant="filled">
+              This is an informational alert!
+            </Alert>
+            <Alert severity="error" variant="filled">
+              This is an error alert!
+            </Alert>
+            <Alert severity="success" variant="filled">
+              This is a success alert!
+            </Alert>
           </section>
 
-          <section className="bg-white p-6 rounded-lg shadow-md mb-8">
+          <section className="bg-white p-6 rounded-xl shadow-md mb-8">
             <h2 className="text-2xl font-bold mb-4">Cards & Buttons</h2>
-            <Card>
+            <Card variant="outlined" className="mb-4">
               <CardContent>
                 <Typography variant="h5" component="div">
                   Card Title
@@ -182,7 +198,7 @@ function App() {
             </div>
           </section>
 
-          <section className="bg-white p-6 rounded-lg shadow-md mb-8">
+          <section className="bg-white p-6 rounded-xl shadow-md mb-8">
             <h2 className="text-2xl font-bold mb-4">Forms & Inputs</h2>
             <div className="space-y-4">
               <TextField
@@ -191,6 +207,7 @@ function App() {
                 fullWidth
                 name="name"
                 required
+                InputLabelProps={{ shrink: true }}
               />
               <TextField
                 label="Email"
@@ -199,6 +216,7 @@ function App() {
                 name="email"
                 type="email"
                 required
+                InputLabelProps={{ shrink: true }}
               />
               <Autocomplete
                 freeSolo
@@ -217,11 +235,12 @@ function App() {
                 value={sliderValue}
                 onChange={(event, newValue) => setSliderValue(newValue)}
                 aria-labelledby="continuous-slider"
+                className="mt-4"
               />
             </div>
           </section>
 
-          <section className="bg-white p-6 rounded-lg shadow-md mb-8">
+          <section className="bg-white p-6 rounded-xl shadow-md mb-8">
             <h2 className="text-2xl font-bold mb-4">Snackbars & Progress</h2>
             <div className="space-y-4">
               <Button
@@ -239,6 +258,7 @@ function App() {
                 <Alert
                   onClose={() => setOpenSnackbar(false)}
                   severity="success"
+                  variant="filled"
                 >
                   This is a success message!
                 </Alert>
