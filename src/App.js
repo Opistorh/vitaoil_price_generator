@@ -54,6 +54,7 @@ import {
   CalendarToday as CalendarTodayIcon,
   Clock as ClockIcon,
   ExpandMore as ExpandMoreIcon,
+  Notifications as NotificationsIcon,
 } from "@mui/icons-material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 
@@ -390,7 +391,7 @@ function App() {
                 <Avatar alt="Пользователь" src="/path/to/avatar.jpg" />
                 <Typography className="text-lg">Пользователь</Typography>
                 <Badge badgeContent={4} color="primary">
-                  <NotificationIcon />
+                  <NotificationsIcon />
                 </Badge>
               </div>
             </section>
