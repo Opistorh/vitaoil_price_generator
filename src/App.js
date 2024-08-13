@@ -51,14 +51,49 @@ import {
 } from "@mui/icons-material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 
-const theme = createTheme({
+const lightTheme = createTheme({
   palette: {
-    mode: "light", // Используйте 'dark' для темной темы
+    mode: "light",
     primary: {
-      main: "#007aff", // Пример цвета из палитры iOS
+      main: "#007aff",
     },
     secondary: {
-      main: "#ff3b30", // Пример цвета акцента
+      main: "#ff3b30",
+    },
+  },
+  components: {
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: "12px",
+        },
+      },
+    },
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: "12px",
+        },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          borderRadius: "8px",
+        },
+      },
+    },
+  },
+});
+
+const darkTheme = createTheme({
+  palette: {
+    mode: "dark",
+    primary: {
+      main: "#007aff",
+    },
+    secondary: {
+      main: "#ff3b30",
     },
   },
   components: {
@@ -99,6 +134,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
   const [accordionOpen, setAccordionOpen] = useState(false);
+  const [theme, setTheme] = useState("light"); // Manage theme state
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
@@ -108,8 +144,13 @@ function App() {
     setAutocompleteValue(newValue);
   };
 
+  const handleMenuItemClick = (theme) => {
+    setTheme(theme);
+    setDrawerOpen(false); // Close the drawer when a theme is selected
+  };
+
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={theme === "light" ? lightTheme : darkTheme}>
       <div className="bg-gray-50 min-h-screen flex flex-col">
         <AppBar position="static" color="primary" className="shadow-md">
           <Toolbar>
@@ -124,6 +165,13 @@ function App() {
             <Typography variant="h6" className="flex-grow text-center">
               Demo UI
             </Typography>
+            <IconButton
+              color="inherit"
+              aria-label="theme-switcher"
+              onClick={() => setDrawerOpen(true)}
+            >
+              <MenuIcon />
+            </IconButton>
           </Toolbar>
         </AppBar>
 
@@ -306,6 +354,34 @@ function App() {
             </section>
           </main>
         </div>
+
+        <Dialog open={drawerOpen} onClose={() => setDrawerOpen(false)}>
+          <div className="p-4">
+            <IconButton
+              edge="end"
+              color="inherit"
+              onClick={() => setDrawerOpen(false)}
+            >
+              <CloseIcon />
+            </IconButton>
+            <Menu>
+              <div className="flex flex-col">
+                <Button
+                  onClick={() => handleMenuItemClick("light")}
+                  className="my-2"
+                >
+                  Light Theme
+                </Button>
+                <Button
+                  onClick={() => handleMenuItemClick("dark")}
+                  className="my-2"
+                >
+                  Dark Theme
+                </Button>
+              </div>
+            </Menu>
+          </div>
+        </Dialog>
       </div>
     </ThemeProvider>
   );
