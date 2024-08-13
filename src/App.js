@@ -20,6 +20,16 @@ import {
   Alert,
   CircularProgress,
   LinearProgress,
+  Card,
+  CardContent,
+  CardActions,
+  Tabs,
+  Tab,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Autocomplete,
+  Typography,
 } from "@mui/material";
 import {
   Menu as MenuIcon,
@@ -37,11 +47,11 @@ import {
   FileCopy as FileCopyIcon,
   CalendarToday as CalendarTodayIcon,
   Clock as ClockIcon,
+  ExpandMore as ExpandMoreIcon,
 } from "@mui/icons-material";
 
 function App() {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [notifications, setNotifications] = useState([]);
   const [rating, setRating] = useState(0);
   const [sliderValue, setSliderValue] = useState(50);
   const [switchChecked, setSwitchChecked] = useState(false);
@@ -51,18 +61,15 @@ function App() {
   const [dialogTitle, setDialogTitle] = useState("Dialog Title");
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
+  const [accordionOpen, setAccordionOpen] = useState(false);
 
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    // Handle form submission
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
   };
 
-  const handleInputChange = (e) => {
-    setAutocompleteValue(e.target.value);
-  };
-
-  const handleDismissNotification = (index) => {
-    setNotifications(notifications.filter((_, i) => i !== index));
+  const handleAutocompleteChange = (event, newValue) => {
+    setAutocompleteValue(newValue);
   };
 
   return (
@@ -82,45 +89,102 @@ function App() {
       </AppBar>
 
       <div className="flex flex-1">
-        <Drawer
-          anchor="left"
-          open={drawerOpen}
-          onClose={() => setDrawerOpen(false)}
-        >
-          <div className="w-64 bg-gray-800 text-white p-4">
-            <IconButton onClick={() => setDrawerOpen(false)} className="mb-4">
-              <CloseIcon />
-            </IconButton>
-            <div>
-              <Button
-                onClick={() => setBottomNavValue("home")}
-                color={bottomNavValue === "home" ? "secondary" : "inherit"}
-                startIcon={<HomeIcon />}
-              >
-                Home
-              </Button>
-              <Button
-                onClick={() => setBottomNavValue("info")}
-                color={bottomNavValue === "info" ? "secondary" : "inherit"}
-                startIcon={<InfoIcon />}
-              >
-                Info
-              </Button>
-              <Button
-                onClick={() => setBottomNavValue("settings")}
-                color={bottomNavValue === "settings" ? "secondary" : "inherit"}
-                startIcon={<SettingsIcon />}
-              >
-                Settings
-              </Button>
-            </div>
-          </div>
-        </Drawer>
-
         <main className="flex-1 p-6">
           <section className="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h2 className="text-2xl font-bold mb-4">Forms</h2>
-            <form onSubmit={handleFormSubmit} className="space-y-4">
+            <h2 className="text-2xl font-bold mb-4">Tabs & Switches</h2>
+            <Tabs
+              value={activeTab}
+              onChange={handleTabChange}
+              aria-label="tabs example"
+            >
+              <Tab label="Tab 1" />
+              <Tab label="Tab 2" />
+              <Tab label="Tab 3" />
+            </Tabs>
+            <div className="mt-4">
+              {activeTab === 0 && <div>Content for Tab 1</div>}
+              {activeTab === 1 && <div>Content for Tab 2</div>}
+              {activeTab === 2 && <div>Content for Tab 3</div>}
+            </div>
+            <Divider className="my-6" />
+            <div>
+              <label className="block text-gray-700 mb-2">Switch</label>
+              <Switch
+                checked={switchChecked}
+                onChange={() => setSwitchChecked(!switchChecked)}
+              />
+            </div>
+          </section>
+
+          <section className="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 className="text-2xl font-bold mb-4">Accordions & Alerts</h2>
+            <Accordion
+              expanded={accordionOpen}
+              onChange={() => setAccordionOpen(!accordionOpen)}
+            >
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography className="text-lg font-semibold">
+                  Accordion Header
+                </Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Typography>
+                  Accordion content goes here. You can add more components here.
+                </Typography>
+              </AccordionDetails>
+            </Accordion>
+            <Divider className="my-6" />
+            <Alert severity="info">This is an informational alert!</Alert>
+            <Alert severity="error">This is an error alert!</Alert>
+            <Alert severity="success">This is a success alert!</Alert>
+          </section>
+
+          <section className="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 className="text-2xl font-bold mb-4">Cards & Buttons</h2>
+            <Card>
+              <CardContent>
+                <Typography variant="h5" component="div">
+                  Card Title
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Card content goes here.
+                </Typography>
+              </CardContent>
+              <CardActions>
+                <Button size="small" color="primary">
+                  Learn More
+                </Button>
+              </CardActions>
+            </Card>
+            <Divider className="my-6" />
+            <div className="flex space-x-4">
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<AddIcon />}
+              >
+                Add
+              </Button>
+              <Button
+                variant="contained"
+                color="secondary"
+                startIcon={<EditIcon />}
+              >
+                Edit
+              </Button>
+              <Button
+                variant="contained"
+                color="error"
+                startIcon={<DeleteIcon />}
+              >
+                Delete
+              </Button>
+            </div>
+          </section>
+
+          <section className="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 className="text-2xl font-bold mb-4">Forms & Inputs</h2>
+            <div className="space-y-4">
               <TextField
                 label="Name"
                 variant="outlined"
@@ -136,140 +200,37 @@ function App() {
                 type="email"
                 required
               />
-              <TextField
-                label="Role"
-                variant="outlined"
-                fullWidth
-                name="role"
-                required
+              <Autocomplete
+                freeSolo
+                options={["Option 1", "Option 2", "Option 3"]}
+                value={autocompleteValue}
+                onChange={handleAutocompleteChange}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Autocomplete"
+                    variant="outlined"
+                  />
+                )}
               />
-              <Button type="submit" variant="contained" color="primary">
-                Submit
-              </Button>
-            </form>
-          </section>
-
-          <section className="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h2 className="text-2xl font-bold mb-4">Interactive Elements</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-gray-700 mb-2">Checkbox</label>
-                <Checkbox />
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2">Radio</label>
-                <FormControlLabel control={<Radio />} label="Option 1" />
-                <FormControlLabel control={<Radio />} label="Option 2" />
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2">Rating</label>
-                <Rating
-                  name="rating"
-                  value={rating}
-                  onChange={(event, newValue) => setRating(newValue)}
-                  icon={<StarIcon />}
-                  emptyIcon={<StarBorderIcon />}
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2">Slider</label>
-                <Slider
-                  value={sliderValue}
-                  onChange={(event, newValue) => setSliderValue(newValue)}
-                  aria-labelledby="continuous-slider"
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2">Switch</label>
-                <Switch
-                  checked={switchChecked}
-                  onChange={() => setSwitchChecked(!switchChecked)}
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2">Autocomplete</label>
-                <TextField
-                  value={autocompleteValue}
-                  onChange={handleInputChange}
-                  placeholder="Type to autocomplete"
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2">
-                  Multiline Input
-                </label>
-                <TextField
-                  multiline
-                  rows={4}
-                  placeholder="Type your text here..."
-                  fullWidth
-                />
-              </div>
+              <Slider
+                value={sliderValue}
+                onChange={(event, newValue) => setSliderValue(newValue)}
+                aria-labelledby="continuous-slider"
+              />
             </div>
           </section>
 
           <section className="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h2 className="text-2xl font-bold mb-4">Navigation</h2>
+            <h2 className="text-2xl font-bold mb-4">Snackbars & Progress</h2>
             <div className="space-y-4">
-              <BottomNavigation
-                showLabels
-                value={bottomNavValue}
-                onChange={(event, newValue) => setBottomNavValue(newValue)}
+              <Button
+                onClick={() => setOpenSnackbar(true)}
+                variant="contained"
+                color="primary"
               >
-                <BottomNavigationAction
-                  label="Home"
-                  value="home"
-                  icon={<HomeIcon />}
-                />
-                <BottomNavigationAction
-                  label="Info"
-                  value="info"
-                  icon={<InfoIcon />}
-                />
-                <BottomNavigationAction
-                  label="Settings"
-                  value="settings"
-                  icon={<SettingsIcon />}
-                />
-              </BottomNavigation>
-              <Breadcrumbs aria-label="breadcrumb">
-                <Link href="#" color="inherit">
-                  Home
-                </Link>
-                <Link href="#" color="inherit">
-                  Projects
-                </Link>
-                <Typography color="textPrimary">Current Page</Typography>
-              </Breadcrumbs>
-              <Pagination count={10} color="primary" />
-            </div>
-          </section>
-
-          <section className="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h2 className="text-2xl font-bold mb-4">Dialogs & Alerts</h2>
-            <div className="space-y-4">
-              <div className="flex justify-end">
-                <Button
-                  onClick={() => setDialogOpen(true)}
-                  variant="contained"
-                  color="primary"
-                >
-                  Open Dialog
-                </Button>
-              </div>
-              <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
-                <div className="bg-white p-6 rounded-lg shadow-md">
-                  <h3 className="text-xl font-semibold mb-4">{dialogTitle}</h3>
-                  <p className="mb-4">This is a dialog content.</p>
-                  <Button
-                    onClick={() => setDialogOpen(false)}
-                    variant="contained"
-                    color="secondary"
-                  >
-                    Close
-                  </Button>
-                </div>
-              </Dialog>
+                Show Snackbar
+              </Button>
               <Snackbar
                 open={openSnackbar}
                 autoHideDuration={6000}
@@ -282,51 +243,13 @@ function App() {
                   This is a success message!
                 </Alert>
               </Snackbar>
-              <div className="bg-red-100 p-4 rounded-lg border border-red-300 text-red-800">
-                <p className="text-sm font-medium">Error Alert</p>
-              </div>
-              <div className="bg-yellow-100 p-4 rounded-lg border border-yellow-300 text-yellow-800">
-                <p className="text-sm font-medium">Warning Alert</p>
-              </div>
-              <div className="bg-green-100 p-4 rounded-lg border border-green-300 text-green-800">
-                <p className="text-sm font-medium">Success Alert</p>
-              </div>
-              <div className="relative pt-1">
-                <div className="flex mb-2 items-center justify-between">
-                  <div className="text-xs font-semibold inline-block py-1 px-2 rounded text-blue-600 bg-blue-200">
-                    Progress
-                  </div>
-                </div>
-                <div className="flex">
-                  <div className="relative flex-grow w-full bg-gray-200 rounded">
-                    <div
-                      className="absolute top-0 left-0 h-full bg-blue-600 rounded"
-                      style={{ width: "50%" }}
-                    />
-                  </div>
-                  <span className="text-xs font-semibold inline-block px-2 py-1 rounded text-blue-600 bg-blue-200 ml-2">
-                    50%
-                  </span>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section className="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h2 className="text-2xl font-bold mb-4">Tooltips & Skeletons</h2>
-            <div className="space-y-4">
-              <Tooltip title="Tooltip Content" arrow>
-                <Button variant="contained" color="primary">
-                  Hover me
-                </Button>
-              </Tooltip>
-              <div className="bg-gray-200 p-6 rounded-lg">
-                <div className="animate-pulse flex space-x-4">
-                  <div className="flex-1 space-y-6 py-1">
-                    <div className="h-4 bg-gray-300 rounded"></div>
-                    <div className="h-4 bg-gray-300 rounded w-3/4"></div>
-                  </div>
-                </div>
+              <div className="mt-4">
+                <CircularProgress />
+                <LinearProgress
+                  className="mt-4"
+                  variant="determinate"
+                  value={50}
+                />
               </div>
             </div>
           </section>
