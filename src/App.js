@@ -60,19 +60,31 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 
 const theme = createTheme({
   palette: {
-    mode: "light",
+    mode: "dark",
     primary: {
       main: "#007aff",
     },
     secondary: {
       main: "#ff3b30",
     },
+    background: {
+      default: "#121212",
+      paper: "#1e1e1e",
+    },
+    text: {
+      primary: "#e0e0e0",
+      secondary: "#b0b0b0",
+    },
+  },
+  typography: {
+    fontFamily: "Inter, sans-serif",
   },
   components: {
     MuiCard: {
       styleOverrides: {
         root: {
           borderRadius: "12px",
+          backgroundColor: "#1e1e1e",
         },
       },
     },
@@ -87,6 +99,20 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: "8px",
+        },
+      },
+    },
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          backgroundColor: "#1e1e1e",
+        },
+      },
+    },
+    MuiDivider: {
+      styleOverrides: {
+        root: {
+          backgroundColor: "#333",
         },
       },
     },
@@ -133,7 +159,7 @@ function App() {
 
   return (
     <ThemeProvider theme={theme}>
-      <div className="bg-gray-50 min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col bg-background-default text-text-primary">
         <AppBar position="static" color="primary" className="shadow-md">
           <Toolbar>
             <IconButton
@@ -152,7 +178,7 @@ function App() {
 
         <div className="flex flex-1 flex-col sm:flex-row">
           <main className="flex-1 p-6">
-            <section className="bg-white p-6 rounded-lg shadow-md mb-8">
+            <section className="bg-paper p-6 rounded-lg shadow-md mb-8">
               <h2 className="text-2xl font-bold mb-4">
                 Вкладки и переключатели
               </h2>
@@ -173,7 +199,7 @@ function App() {
               </div>
               <Divider className="my-6" />
               <div className="flex items-center space-x-4">
-                <Typography className="text-gray-700">Переключатель</Typography>
+                <Typography className="text-gray-300">Переключатель</Typography>
                 <Switch
                   checked={switchChecked}
                   onChange={() => setSwitchChecked(!switchChecked)}
@@ -181,7 +207,7 @@ function App() {
               </div>
             </section>
 
-            <section className="bg-white p-6 rounded-lg shadow-md mb-8">
+            <section className="bg-paper p-6 rounded-lg shadow-md mb-8">
               <h2 className="text-2xl font-bold mb-4">Аккордеоны и Алерты</h2>
               <Accordion
                 expanded={accordionOpen}
@@ -211,7 +237,7 @@ function App() {
               </Alert>
             </section>
 
-            <section className="bg-white p-6 rounded-lg shadow-md mb-8">
+            <section className="bg-paper p-6 rounded-lg shadow-md mb-8">
               <h2 className="text-2xl font-bold mb-4">Карты и Кнопки</h2>
               <Card variant="outlined" className="mb-4">
                 <CardContent>
@@ -254,7 +280,7 @@ function App() {
               </div>
             </section>
 
-            <section className="bg-white p-6 rounded-lg shadow-md mb-8">
+            <section className="bg-paper p-6 rounded-lg shadow-md mb-8">
               <h2 className="text-2xl font-bold mb-4">
                 Формы и Входные данные
               </h2>
@@ -272,13 +298,11 @@ function App() {
                   variant="outlined"
                   fullWidth
                   name="email"
-                  type="email"
                   required
                   InputLabelProps={{ shrink: true }}
                 />
                 <Autocomplete
-                  freeSolo
-                  options={["Вариант 1", "Вариант 2", "Вариант 3"]}
+                  options={["Опция 1", "Опция 2", "Опция 3"]}
                   value={autocompleteValue}
                   onChange={handleAutocompleteChange}
                   renderInput={(params) => (
@@ -289,14 +313,8 @@ function App() {
                     />
                   )}
                 />
-                <Slider
-                  value={sliderValue}
-                  onChange={(event, newValue) => setSliderValue(newValue)}
-                  aria-labelledby="continuous-slider"
-                  className="mt-4"
-                />
-                <FormControl component="fieldset" className="mt-4">
-                  <FormLabel component="legend">Выберите опцию</FormLabel>
+                <FormControl component="fieldset">
+                  <FormLabel component="legend">Радиокнопки</FormLabel>
                   <RadioGroup
                     value={selectedRadio}
                     onChange={handleRadioChange}
@@ -311,14 +329,9 @@ function App() {
                       control={<Radio />}
                       label="Опция 2"
                     />
-                    <FormControlLabel
-                      value="option3"
-                      control={<Radio />}
-                      label="Опция 3"
-                    />
                   </RadioGroup>
                 </FormControl>
-                <FormControl component="fieldset" className="mt-4">
+                <FormControl component="fieldset">
                   <FormLabel component="legend">Чекбоксы</FormLabel>
                   <FormControlLabel
                     control={
@@ -344,7 +357,7 @@ function App() {
               </div>
             </section>
 
-            <section className="bg-white p-6 rounded-lg shadow-md mb-8">
+            <section className="bg-paper p-6 rounded-lg shadow-md mb-8">
               <h2 className="text-2xl font-bold mb-4">Список и Таблица</h2>
               <Typography className="mb-2">Список:</Typography>
               <ul className="list-disc pl-6">
@@ -355,37 +368,49 @@ function App() {
               <Divider className="my-6" />
               <Typography className="mb-2">Таблица:</Typography>
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-100">
+                <table className="min-w-full divide-y divide-gray-600">
+                  <thead className="bg-gray-800">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                         Колонка 1
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                         Колонка 2
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                         Колонка 3
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-gray-900 divide-y divide-gray-700">
                     <tr>
-                      <td className="px-6 py-4 whitespace-nowrap">Данные 1</td>
-                      <td className="px-6 py-4 whitespace-nowrap">Данные 2</td>
-                      <td className="px-6 py-4 whitespace-nowrap">Данные 3</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-300">
+                        Данные 1
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-300">
+                        Данные 2
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-300">
+                        Данные 3
+                      </td>
                     </tr>
                     <tr>
-                      <td className="px-6 py-4 whitespace-nowrap">Данные 4</td>
-                      <td className="px-6 py-4 whitespace-nowrap">Данные 5</td>
-                      <td className="px-6 py-4 whitespace-nowrap">Данные 6</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-300">
+                        Данные 4
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-300">
+                        Данные 5
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-300">
+                        Данные 6
+                      </td>
                     </tr>
                   </tbody>
                 </table>
               </div>
             </section>
 
-            <section className="bg-white p-6 rounded-lg shadow-md mb-8">
+            <section className="bg-paper p-6 rounded-lg shadow-md mb-8">
               <h2 className="text-2xl font-bold mb-4">Иконки и Аватары</h2>
               <div className="flex items-center space-x-4">
                 <Avatar alt="Пользователь" src="/path/to/avatar.jpg" />
@@ -396,7 +421,7 @@ function App() {
               </div>
             </section>
 
-            <section className="bg-white p-6 rounded-lg shadow-md mb-8">
+            <section className="bg-paper p-6 rounded-lg shadow-md mb-8">
               <h2 className="text-2xl font-bold mb-4">Снекбары и Прогресс</h2>
               <div className="space-y-4">
                 <Button
