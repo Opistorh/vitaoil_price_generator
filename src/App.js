@@ -61,6 +61,29 @@ const theme = createTheme({
       main: "#ff3b30", // Пример цвета акцента
     },
   },
+  components: {
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: "12px",
+        },
+      },
+    },
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: "12px",
+        },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          borderRadius: "8px",
+        },
+      },
+    },
+  },
 });
 
 function App() {
@@ -104,7 +127,7 @@ function App() {
           </Toolbar>
         </AppBar>
 
-        <div className="flex flex-1">
+        <div className="flex flex-1 flex-col sm:flex-row">
           <main className="flex-1 p-6">
             <section className="bg-white p-6 rounded-lg shadow-md mb-8">
               <h2 className="text-2xl font-bold mb-4">Tabs & Switches</h2>
@@ -181,7 +204,7 @@ function App() {
                 </CardActions>
               </Card>
               <Divider className="my-6" />
-              <div className="flex space-x-4">
+              <div className="flex flex-wrap gap-4">
                 <Button
                   variant="contained"
                   color="primary"
