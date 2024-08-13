@@ -62,10 +62,10 @@ const theme = createTheme({
   palette: {
     mode: "dark",
     primary: {
-      main: "#007aff",
+      main: "#1e90ff", // A bright blue for primary actions
     },
     secondary: {
-      main: "#ff3b30",
+      main: "#ff5722", // A vibrant orange for secondary actions
     },
     background: {
       default: "#121212",
@@ -78,6 +78,10 @@ const theme = createTheme({
   },
   typography: {
     fontFamily: "Inter, sans-serif",
+    h1: { fontWeight: 700, fontSize: "2.5rem" },
+    h2: { fontWeight: 600, fontSize: "2rem" },
+    h3: { fontWeight: 600, fontSize: "1.75rem" },
+    body1: { fontWeight: 400, fontSize: "1rem" },
   },
   components: {
     MuiCard: {
@@ -85,13 +89,32 @@ const theme = createTheme({
         root: {
           borderRadius: "12px",
           backgroundColor: "#1e1e1e",
+          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
         },
       },
     },
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: "12px",
+          borderRadius: "8px",
+          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          transition: "all 0.3s ease",
+          "&:hover": {
+            boxShadow: "0 6px 12px rgba(0, 0, 0, 0.2)",
+            transform: "scale(1.05)",
+          },
+        },
+        containedPrimary: {
+          backgroundColor: "#1e90ff",
+          "&:hover": {
+            backgroundColor: "#1c86ee",
+          },
+        },
+        containedSecondary: {
+          backgroundColor: "#ff5722",
+          "&:hover": {
+            backgroundColor: "#e64a19",
+          },
         },
       },
     },
@@ -99,6 +122,15 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: "8px",
+          backgroundColor: "#2c2c2c",
+          "& .MuiOutlinedInput-root": {
+            "& fieldset": {
+              borderColor: "#333",
+            },
+            "&:hover fieldset": {
+              borderColor: "#1e90ff",
+            },
+          },
         },
       },
     },
@@ -106,6 +138,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundColor: "#1e1e1e",
+          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
         },
       },
     },
@@ -113,6 +146,42 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundColor: "#333",
+        },
+      },
+    },
+    MuiAccordionSummary: {
+      styleOverrides: {
+        root: {
+          backgroundColor: "#2c2c2c",
+          borderBottom: "1px solid #333",
+          borderRadius: "8px",
+          "&:hover": {
+            backgroundColor: "#3c3c3c",
+          },
+        },
+      },
+    },
+    MuiAccordionDetails: {
+      styleOverrides: {
+        root: {
+          backgroundColor: "#2c2c2c",
+          borderRadius: "8px",
+        },
+      },
+    },
+    MuiSnackbar: {
+      styleOverrides: {
+        root: {
+          borderRadius: "8px",
+        },
+      },
+    },
+    MuiDialog: {
+      styleOverrides: {
+        paper: {
+          borderRadius: "12px",
+          backgroundColor: "#1e1e1e",
+          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.3)",
         },
       },
     },
@@ -159,7 +228,7 @@ function App() {
 
   return (
     <ThemeProvider theme={theme}>
-      <div className="min-h-screen flex flex-col bg-background-default text-text-primary">
+      <div className="min-h-screen flex flex-col bg-background-default text-text-primary font-sans">
         <AppBar position="static" color="primary" className="shadow-md">
           <Toolbar>
             <IconButton
@@ -179,7 +248,7 @@ function App() {
         <div className="flex flex-1 flex-col sm:flex-row">
           <main className="flex-1 p-6">
             <section className="bg-paper p-6 rounded-lg shadow-md mb-8">
-              <h2 className="text-2xl font-bold mb-4">
+              <h2 className="text-2xl font-semibold mb-4">
                 Вкладки и переключатели
               </h2>
               <Tabs
@@ -192,114 +261,55 @@ function App() {
                 <Tab label="Вкладка 2" />
                 <Tab label="Вкладка 3" />
               </Tabs>
-              <div className="mt-4">
-                {activeTab === 0 && <div>Содержимое для вкладки 1</div>}
-                {activeTab === 1 && <div>Содержимое для вкладки 2</div>}
-                {activeTab === 2 && <div>Содержимое для вкладки 3</div>}
-              </div>
-              <Divider className="my-6" />
-              <div className="flex items-center space-x-4">
-                <Typography className="text-gray-300">Переключатель</Typography>
-                <Switch
-                  checked={switchChecked}
-                  onChange={() => setSwitchChecked(!switchChecked)}
-                />
-              </div>
+              {activeTab === 0 && (
+                <Typography className="mt-4">Содержимое вкладки 1</Typography>
+              )}
+              {activeTab === 1 && (
+                <Typography className="mt-4">Содержимое вкладки 2</Typography>
+              )}
+              {activeTab === 2 && (
+                <Typography className="mt-4">Содержимое вкладки 3</Typography>
+              )}
             </section>
 
             <section className="bg-paper p-6 rounded-lg shadow-md mb-8">
-              <h2 className="text-2xl font-bold mb-4">Аккордеоны и Алерты</h2>
-              <Accordion
-                expanded={accordionOpen}
-                onChange={() => setAccordionOpen(!accordionOpen)}
-              >
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography className="text-lg font-semibold">
-                    Заголовок аккордеона
-                  </Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <Typography>
-                    Содержимое аккордеона. Здесь можно добавить другие
-                    компоненты.
-                  </Typography>
-                </AccordionDetails>
-              </Accordion>
-              <Divider className="my-6" />
-              <Alert severity="info" variant="filled">
-                Это информационное сообщение!
-              </Alert>
-              <Alert severity="error" variant="filled">
-                Это сообщение об ошибке!
-              </Alert>
-              <Alert severity="success" variant="filled">
-                Это сообщение об успехе!
-              </Alert>
-            </section>
-
-            <section className="bg-paper p-6 rounded-lg shadow-md mb-8">
-              <h2 className="text-2xl font-bold mb-4">Карты и Кнопки</h2>
-              <Card variant="outlined" className="mb-4">
-                <CardContent>
-                  <Typography variant="h5" component="div">
-                    Заголовок карты
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Содержимое карты.
-                  </Typography>
-                </CardContent>
-                <CardActions>
-                  <Button size="small" color="primary">
-                    Узнать больше
-                  </Button>
-                </CardActions>
-              </Card>
-              <Divider className="my-6" />
+              <h2 className="text-2xl font-semibold mb-4">
+                Актуальные элементы
+              </h2>
               <div className="flex flex-wrap gap-4">
                 <Button
                   variant="contained"
                   color="primary"
-                  startIcon={<AddIcon />}
+                  onClick={() => setOpenSnackbar(true)}
                 >
-                  Добавить
+                  Показать Snackbar
                 </Button>
-                <Button
-                  variant="contained"
-                  color="secondary"
-                  startIcon={<EditIcon />}
-                >
-                  Редактировать
+                <Button variant="outlined" color="secondary">
+                  Outlined Button
                 </Button>
-                <Button
-                  variant="contained"
-                  color="error"
-                  startIcon={<DeleteIcon />}
-                >
-                  Удалить
+                <Button variant="text" color="primary" startIcon={<AddIcon />}>
+                  Icon Button
                 </Button>
-              </div>
-            </section>
-
-            <section className="bg-paper p-6 rounded-lg shadow-md mb-8">
-              <h2 className="text-2xl font-bold mb-4">
-                Формы и Входные данные
-              </h2>
-              <div className="space-y-4">
-                <TextField
-                  label="Имя"
-                  variant="outlined"
-                  fullWidth
-                  name="name"
-                  required
-                  InputLabelProps={{ shrink: true }}
+                <Button variant="contained" color="secondary" className="fab">
+                  FAB
+                </Button>
+                <ButtonGroup variant="contained" color="primary">
+                  <Button>Button 1</Button>
+                  <Button>Button 2</Button>
+                  <Button>Button 3</Button>
+                </ButtonGroup>
+                <Tooltip title="Информация">
+                  <IconButton color="primary">
+                    <InfoIcon />
+                  </IconButton>
+                </Tooltip>
+                <Switch
+                  checked={switchChecked}
+                  onChange={() => setSwitchChecked(!switchChecked)}
                 />
-                <TextField
-                  label="Электронная почта"
-                  variant="outlined"
-                  fullWidth
-                  name="email"
-                  required
-                  InputLabelProps={{ shrink: true }}
+                <Slider
+                  value={sliderValue}
+                  onChange={(e, newValue) => setSliderValue(newValue)}
                 />
                 <Autocomplete
                   options={["Опция 1", "Опция 2", "Опция 3"]}
@@ -358,7 +368,7 @@ function App() {
             </section>
 
             <section className="bg-paper p-6 rounded-lg shadow-md mb-8">
-              <h2 className="text-2xl font-bold mb-4">Список и Таблица</h2>
+              <h2 className="text-2xl font-semibold mb-4">Список и Таблица</h2>
               <Typography className="mb-2">Список:</Typography>
               <ul className="list-disc pl-6">
                 <li>Пункт 1</li>
@@ -411,7 +421,7 @@ function App() {
             </section>
 
             <section className="bg-paper p-6 rounded-lg shadow-md mb-8">
-              <h2 className="text-2xl font-bold mb-4">Иконки и Аватары</h2>
+              <h2 className="text-2xl font-semibold mb-4">Иконки и Аватары</h2>
               <div className="flex items-center space-x-4">
                 <Avatar alt="Пользователь" src="/path/to/avatar.jpg" />
                 <Typography className="text-lg">Пользователь</Typography>
@@ -422,7 +432,9 @@ function App() {
             </section>
 
             <section className="bg-paper p-6 rounded-lg shadow-md mb-8">
-              <h2 className="text-2xl font-bold mb-4">Снекбары и Прогресс</h2>
+              <h2 className="text-2xl font-semibold mb-4">
+                Снекбары и Прогресс
+              </h2>
               <div className="space-y-4">
                 <Button
                   variant="contained"
