@@ -30,6 +30,12 @@ import {
   AccordionDetails,
   Autocomplete,
   Typography,
+  Radio,
+  RadioGroup,
+  FormControlLabel,
+  Checkbox,
+  FormControl,
+  FormLabel,
 } from "@mui/material";
 import {
   Menu as MenuIcon,
@@ -51,44 +57,9 @@ import {
 } from "@mui/icons-material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 
-const lightTheme = createTheme({
+const theme = createTheme({
   palette: {
     mode: "light",
-    primary: {
-      main: "#007aff",
-    },
-    secondary: {
-      main: "#ff3b30",
-    },
-  },
-  components: {
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: "12px",
-        },
-      },
-    },
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: "12px",
-        },
-      },
-    },
-    MuiTextField: {
-      styleOverrides: {
-        root: {
-          borderRadius: "8px",
-        },
-      },
-    },
-  },
-});
-
-const darkTheme = createTheme({
-  palette: {
-    mode: "dark",
     primary: {
       main: "#007aff",
     },
@@ -129,12 +100,16 @@ function App() {
   const [autocompleteValue, setAutocompleteValue] = useState("");
   const [bottomNavValue, setBottomNavValue] = useState("home");
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [dialogTitle, setDialogTitle] = useState("Dialog Title");
+  const [dialogTitle, setDialogTitle] = useState("Заголовок диалога");
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
   const [accordionOpen, setAccordionOpen] = useState(false);
-  const [theme, setTheme] = useState("light"); // Manage theme state
+  const [selectedRadio, setSelectedRadio] = useState("option1");
+  const [checkedCheckboxes, setCheckedCheckboxes] = useState({
+    checkbox1: false,
+    checkbox2: false,
+  });
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
@@ -144,13 +119,19 @@ function App() {
     setAutocompleteValue(newValue);
   };
 
-  const handleMenuItemClick = (theme) => {
-    setTheme(theme);
-    setDrawerOpen(false); // Close the drawer when a theme is selected
+  const handleCheckboxChange = (event) => {
+    setCheckedCheckboxes({
+      ...checkedCheckboxes,
+      [event.target.name]: event.target.checked,
+    });
+  };
+
+  const handleRadioChange = (event) => {
+    setSelectedRadio(event.target.value);
   };
 
   return (
-    <ThemeProvider theme={theme === "light" ? lightTheme : darkTheme}>
+    <ThemeProvider theme={theme}>
       <div className="bg-gray-50 min-h-screen flex flex-col">
         <AppBar position="static" color="primary" className="shadow-md">
           <Toolbar>
@@ -163,40 +144,35 @@ function App() {
               <MenuIcon />
             </IconButton>
             <Typography variant="h6" className="flex-grow text-center">
-              Demo UI
+              Defengate
             </Typography>
-            <IconButton
-              color="inherit"
-              aria-label="theme-switcher"
-              onClick={() => setDrawerOpen(true)}
-            >
-              <MenuIcon />
-            </IconButton>
           </Toolbar>
         </AppBar>
 
         <div className="flex flex-1 flex-col sm:flex-row">
           <main className="flex-1 p-6">
             <section className="bg-white p-6 rounded-lg shadow-md mb-8">
-              <h2 className="text-2xl font-bold mb-4">Tabs & Switches</h2>
+              <h2 className="text-2xl font-bold mb-4">
+                Вкладки и переключатели
+              </h2>
               <Tabs
                 value={activeTab}
                 onChange={handleTabChange}
                 aria-label="tabs example"
                 centered
               >
-                <Tab label="Tab 1" />
-                <Tab label="Tab 2" />
-                <Tab label="Tab 3" />
+                <Tab label="Вкладка 1" />
+                <Tab label="Вкладка 2" />
+                <Tab label="Вкладка 3" />
               </Tabs>
               <div className="mt-4">
-                {activeTab === 0 && <div>Content for Tab 1</div>}
-                {activeTab === 1 && <div>Content for Tab 2</div>}
-                {activeTab === 2 && <div>Content for Tab 3</div>}
+                {activeTab === 0 && <div>Содержимое для вкладки 1</div>}
+                {activeTab === 1 && <div>Содержимое для вкладки 2</div>}
+                {activeTab === 2 && <div>Содержимое для вкладки 3</div>}
               </div>
               <Divider className="my-6" />
               <div className="flex items-center space-x-4">
-                <Typography className="text-gray-700">Switch</Typography>
+                <Typography className="text-gray-700">Переключатель</Typography>
                 <Switch
                   checked={switchChecked}
                   onChange={() => setSwitchChecked(!switchChecked)}
@@ -205,49 +181,49 @@ function App() {
             </section>
 
             <section className="bg-white p-6 rounded-lg shadow-md mb-8">
-              <h2 className="text-2xl font-bold mb-4">Accordions & Alerts</h2>
+              <h2 className="text-2xl font-bold mb-4">Аккордеоны и Алерты</h2>
               <Accordion
                 expanded={accordionOpen}
                 onChange={() => setAccordionOpen(!accordionOpen)}
               >
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                   <Typography className="text-lg font-semibold">
-                    Accordion Header
+                    Заголовок аккордеона
                   </Typography>
                 </AccordionSummary>
                 <AccordionDetails>
                   <Typography>
-                    Accordion content goes here. You can add more components
-                    here.
+                    Содержимое аккордеона. Здесь можно добавить другие
+                    компоненты.
                   </Typography>
                 </AccordionDetails>
               </Accordion>
               <Divider className="my-6" />
               <Alert severity="info" variant="filled">
-                This is an informational alert!
+                Это информационное сообщение!
               </Alert>
               <Alert severity="error" variant="filled">
-                This is an error alert!
+                Это сообщение об ошибке!
               </Alert>
               <Alert severity="success" variant="filled">
-                This is a success alert!
+                Это сообщение об успехе!
               </Alert>
             </section>
 
             <section className="bg-white p-6 rounded-lg shadow-md mb-8">
-              <h2 className="text-2xl font-bold mb-4">Cards & Buttons</h2>
+              <h2 className="text-2xl font-bold mb-4">Карты и Кнопки</h2>
               <Card variant="outlined" className="mb-4">
                 <CardContent>
                   <Typography variant="h5" component="div">
-                    Card Title
+                    Заголовок карты
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Card content goes here.
+                    Содержимое карты.
                   </Typography>
                 </CardContent>
                 <CardActions>
                   <Button size="small" color="primary">
-                    Learn More
+                    Узнать больше
                   </Button>
                 </CardActions>
               </Card>
@@ -258,30 +234,32 @@ function App() {
                   color="primary"
                   startIcon={<AddIcon />}
                 >
-                  Add
+                  Добавить
                 </Button>
                 <Button
                   variant="contained"
                   color="secondary"
                   startIcon={<EditIcon />}
                 >
-                  Edit
+                  Редактировать
                 </Button>
                 <Button
                   variant="contained"
                   color="error"
                   startIcon={<DeleteIcon />}
                 >
-                  Delete
+                  Удалить
                 </Button>
               </div>
             </section>
 
             <section className="bg-white p-6 rounded-lg shadow-md mb-8">
-              <h2 className="text-2xl font-bold mb-4">Forms & Inputs</h2>
+              <h2 className="text-2xl font-bold mb-4">
+                Формы и Входные данные
+              </h2>
               <div className="space-y-4">
                 <TextField
-                  label="Name"
+                  label="Имя"
                   variant="outlined"
                   fullWidth
                   name="name"
@@ -289,7 +267,7 @@ function App() {
                   InputLabelProps={{ shrink: true }}
                 />
                 <TextField
-                  label="Email"
+                  label="Электронная почта"
                   variant="outlined"
                   fullWidth
                   name="email"
@@ -299,13 +277,13 @@ function App() {
                 />
                 <Autocomplete
                   freeSolo
-                  options={["Option 1", "Option 2", "Option 3"]}
+                  options={["Вариант 1", "Вариант 2", "Вариант 3"]}
                   value={autocompleteValue}
                   onChange={handleAutocompleteChange}
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      label="Autocomplete"
+                      label="Автозаполнение"
                       variant="outlined"
                     />
                   )}
@@ -316,18 +294,116 @@ function App() {
                   aria-labelledby="continuous-slider"
                   className="mt-4"
                 />
+                <FormControl component="fieldset" className="mt-4">
+                  <FormLabel component="legend">Выберите опцию</FormLabel>
+                  <RadioGroup
+                    value={selectedRadio}
+                    onChange={handleRadioChange}
+                  >
+                    <FormControlLabel
+                      value="option1"
+                      control={<Radio />}
+                      label="Опция 1"
+                    />
+                    <FormControlLabel
+                      value="option2"
+                      control={<Radio />}
+                      label="Опция 2"
+                    />
+                    <FormControlLabel
+                      value="option3"
+                      control={<Radio />}
+                      label="Опция 3"
+                    />
+                  </RadioGroup>
+                </FormControl>
+                <FormControl component="fieldset" className="mt-4">
+                  <FormLabel component="legend">Чекбоксы</FormLabel>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={checkedCheckboxes.checkbox1}
+                        onChange={handleCheckboxChange}
+                        name="checkbox1"
+                      />
+                    }
+                    label="Чекбокс 1"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={checkedCheckboxes.checkbox2}
+                        onChange={handleCheckboxChange}
+                        name="checkbox2"
+                      />
+                    }
+                    label="Чекбокс 2"
+                  />
+                </FormControl>
               </div>
             </section>
 
             <section className="bg-white p-6 rounded-lg shadow-md mb-8">
-              <h2 className="text-2xl font-bold mb-4">Snackbars & Progress</h2>
+              <h2 className="text-2xl font-bold mb-4">Список и Таблица</h2>
+              <Typography className="mb-2">Список:</Typography>
+              <ul className="list-disc pl-6">
+                <li>Пункт 1</li>
+                <li>Пункт 2</li>
+                <li>Пункт 3</li>
+              </ul>
+              <Divider className="my-6" />
+              <Typography className="mb-2">Таблица:</Typography>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-100">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Колонка 1
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Колонка 2
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Колонка 3
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    <tr>
+                      <td className="px-6 py-4 whitespace-nowrap">Данные 1</td>
+                      <td className="px-6 py-4 whitespace-nowrap">Данные 2</td>
+                      <td className="px-6 py-4 whitespace-nowrap">Данные 3</td>
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 whitespace-nowrap">Данные 4</td>
+                      <td className="px-6 py-4 whitespace-nowrap">Данные 5</td>
+                      <td className="px-6 py-4 whitespace-nowrap">Данные 6</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <section className="bg-white p-6 rounded-lg shadow-md mb-8">
+              <h2 className="text-2xl font-bold mb-4">Иконки и Аватары</h2>
+              <div className="flex items-center space-x-4">
+                <Avatar alt="Пользователь" src="/path/to/avatar.jpg" />
+                <Typography className="text-lg">Пользователь</Typography>
+                <Badge badgeContent={4} color="primary">
+                  <NotificationIcon />
+                </Badge>
+              </div>
+            </section>
+
+            <section className="bg-white p-6 rounded-lg shadow-md mb-8">
+              <h2 className="text-2xl font-bold mb-4">Снекбары и Прогресс</h2>
               <div className="space-y-4">
                 <Button
-                  onClick={() => setOpenSnackbar(true)}
                   variant="contained"
                   color="primary"
+                  onClick={() => setOpenSnackbar(true)}
                 >
-                  Show Snackbar
+                  Показать Snackbar
                 </Button>
                 <Snackbar
                   open={openSnackbar}
@@ -339,7 +415,7 @@ function App() {
                     severity="success"
                     variant="filled"
                   >
-                    This is a success message!
+                    Это сообщение об успехе!
                   </Alert>
                 </Snackbar>
                 <div className="mt-4">
@@ -355,31 +431,16 @@ function App() {
           </main>
         </div>
 
-        <Dialog open={drawerOpen} onClose={() => setDrawerOpen(false)}>
+        <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
           <div className="p-4">
             <IconButton
               edge="end"
               color="inherit"
-              onClick={() => setDrawerOpen(false)}
+              onClick={() => setDialogOpen(false)}
             >
               <CloseIcon />
             </IconButton>
-            <Menu>
-              <div className="flex flex-col">
-                <Button
-                  onClick={() => handleMenuItemClick("light")}
-                  className="my-2"
-                >
-                  Light Theme
-                </Button>
-                <Button
-                  onClick={() => handleMenuItemClick("dark")}
-                  className="my-2"
-                >
-                  Dark Theme
-                </Button>
-              </div>
-            </Menu>
+            <Typography variant="h6">{dialogTitle}</Typography>
           </div>
         </Dialog>
       </div>
