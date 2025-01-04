@@ -1,38 +1,24 @@
-import React from "react";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
-import Rive from "@rive-app/react-canvas";
+import "./styles.css";
+import { useRive, Layout, Fit, Alignment } from "@rive-app/react-canvas";
 
-const theme = createTheme({
-  palette: {
-    mode: "dark",
-    primary: {
-      main: "#1e90ff",
-    },
-    secondary: {
-      main: "#ff5722",
-    },
-    background: {
-      default: "#121212",
-      paper: "#1e1e1e",
-    },
-    text: {
-      primary: "#e0e0e0",
-      secondary: "#b0b0b0",
-    },
-  },
-  typography: {
-    fontFamily: "Inter, sans-serif",
-  },
-});
+export default function App() {
+  const stateMachineName = "State Machine 1";
+  const { rive, RiveComponent } = useRive({
+    src: "untitled.riv",
+    stateMachines: stateMachineName,
+    // TODO: Set stateMachines
+    autoplay: true,
+    layout: new Layout({
+      fit: Fit.Cover,
+      alignment: Alignment.Center,
+    }),
+  });
 
-function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <div className="min-h-screen flex justify-center items-center bg-background-default text-text-primary">
-        <Rive src="./src/untitled.riv" stateMachines="bumpy" />
+    <div className="App">
+      <div className="container">
+        <RiveComponent />
       </div>
-    </ThemeProvider>
+    </div>
   );
 }
-
-export default App;
