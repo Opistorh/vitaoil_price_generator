@@ -59,6 +59,8 @@ import {
 } from "@mui/icons-material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 
+import Rive from "@rive-app/react-canvas";
+
 const theme = createTheme({
   palette: {
     mode: "dark",
@@ -508,6 +510,11 @@ function App() {
             <Typography variant="h6">{dialogTitle}</Typography>
           </div>
         </Dialog>
+
+        <Rive
+          src="https://cdn.rive.app/animations/vehicles.riv"
+          stateMachines="bumpy"
+        />
       </div>
     </ThemeProvider>
   );
