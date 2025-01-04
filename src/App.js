@@ -276,6 +276,10 @@ function App() {
               <h2 className="text-2xl font-semibold mb-4">
                 Вкладки и переключатели
               </h2>
+              <Rive
+                src="https://cdn.rive.app/animations/vehicles.riv"
+                stateMachines="bumpy"
+              />
               <Tabs
                 value={activeTab}
                 onChange={handleTabChange}
@@ -510,11 +514,6 @@ function App() {
             <Typography variant="h6">{dialogTitle}</Typography>
           </div>
         </Dialog>
-
-        <Rive
-          src="https://cdn.rive.app/animations/vehicles.riv"
-          stateMachines="bumpy"
-        />
       </div>
     </ThemeProvider>
   );
