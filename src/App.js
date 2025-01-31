@@ -4,7 +4,7 @@ import { useRive, Layout, Fit, Alignment } from "@rive-app/react-canvas";
 export default function App() {
   const stateMachineName = "State Machine 1";
   const { rive, RiveComponent } = useRive({
-    src: "untitled.riv",
+    src: "vitaoil.riv",
     stateMachines: stateMachineName,
     // TODO: Set stateMachines
     autoplay: true,
