@@ -6,7 +6,7 @@ export default function App() {
   const stateMachineName = "State Machine 1";
   const { rive, RiveComponent } = useRive({
     src: "vitaoil.riv",
-    stateMachines: "State Machine 1",
+    stateMachines: stateMachineName,
     autoplay: true,
     layout: new Layout({
       fit: Fit.Cover,
