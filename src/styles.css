@@ -12,6 +12,7 @@ body {
 .container {
   height: 374px;
   width: 320px;
+  margin-bottom: 32px;
   /*position: absolute;
   top: 0;
   bottom: 0;
