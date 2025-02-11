@@ -16,22 +16,24 @@ export default function App() {
 
   // Храним значения для каждого текстового поля в объекте
   const [textValues, setTextValues] = useState({
-    "95 Red": "",
-    "92 Euro": "",
-    "92 Eco": "",
-    "DT Blue": "",
-    "GAS Purple": "",
+    "95 PREM": "",
+    "92 ECO": "",
+    "92 EURO": "",
+    "DIESEL": "",
+    "GAS": "",
+    "COFFEE": "",
   });
 
   // После инициализации rive, считываем текущие значения текстовых переменных
   useEffect(() => {
     if (rive) {
       setTextValues({
-        "95 Red": rive.getTextRunValue("95 Red") || "",
-        "92 Euro": rive.getTextRunValue("92 Euro") || "",
-        "92 Eco": rive.getTextRunValue("92 Eco") || "",
-        "DT Blue": rive.getTextRunValue("DT Blue") || "",
-        "GAS Purple": rive.getTextRunValue("GAS Purple") || "",
+        "95 PREM": rive.getTextRunValue("95 PREM") || "",
+        "92 ECO": rive.getTextRunValue("92 ECO") || "",
+        "92 EURO": rive.getTextRunValue("92 EURO") || "",
+        "DIESEL": rive.getTextRunValue("DIESEL") || "",
+        "GAS": rive.getTextRunValue("GAS") || "",
+        "COFFEE": rive.getTextRunValue("COFFEE") || "",
       });
     }
   }, [rive]);
@@ -57,7 +59,6 @@ export default function App() {
       <div className="container">
         <RiveComponent />
       </div>
-
       <div className="controls">
         {Object.keys(textValues).map((variableName) => (
           <div className="text-run-control" key={variableName}>
