@@ -1,20 +1,22 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./styles.css";
 import { useRive, Layout, Fit, Alignment } from "@rive-app/react-canvas";
-// ffmpeg.wasm — офлайн FFmpeg в браузере
-import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg";
+
+// С новыми версиями ffmpeg.wasm:
+import { FFmpeg } from "@ffmpeg/ffmpeg";  // вместо createFFmpeg
+import { fetchFile } from "@ffmpeg/util"; // отдельный пакет
 
 export default function App() {
   const stateMachineName = "State Machine 1";
 
   // Инициализируем Rive
   const { rive, RiveComponent } = useRive({
-    src: "vitaoil.riv",             // Ваш .riv-файл
-    stateMachines: stateMachineName, // Название State Machine в редакторе Rive
+    src: "vitaoil.riv",            // Ваш .riv-файл
+    stateMachines: stateMachineName,
     autoplay: true,
     layout: new Layout({
       fit: Fit.Cover,
-      alignment: Alignment.Center,
+      alignment: Alignment.Center
     })
   });
 
@@ -23,27 +25,28 @@ export default function App() {
     "95 PREM": "",
     "92 ECO": "",
     "92 EURO": "",
-    "DIESEL": "",
-    "GAS": "",
-    "COFFEE": ""
+    DIESEL: "",
+    GAS: "",
+    COFFEE: ""
   });
 
-  // Флаг загрузки ffmpeg / хода конвертации
+  // ffmpeg-объект (новый API)
+  // Важно: создаём один экземпляр FFmpeg, не пересоздаём на каждый рендер
+  const ffmpegRef = useRef(null);
+  const [isFFmpegReady, setIsFFmpegReady] = useState(false);
+
+  // Флаг, показывающий, идёт ли сейчас конвертация
   const [isConverting, setIsConverting] = useState(false);
 
-  // Загружаем ffmpeg лишь однажды
-  const ffmpegRef = useRef(null);
-  const [isFFmpegLoaded, setIsFFmpegLoaded] = useState(false);
-
+  // При первом монтировании создаём FFmpeg() и загружаем бинарь
   useEffect(() => {
-    // Инициализируем ffmpeg при первой загрузке
-    const initFFmpeg = async () => {
-      ffmpegRef.current = createFFmpeg({ log: false });
-      await ffmpegRef.current.load();
-      setIsFFmpegLoaded(true);
-      console.log("FFmpeg loaded");
-    };
-    initFFmpeg();
+    (async () => {
+      const ffmpeg = new FFmpeg({ log: false });
+      await ffmpeg.load();   // загружаем wasm-бинарь
+      ffmpegRef.current = ffmpeg;
+      setIsFFmpegReady(true);
+      console.log("FFmpeg загружен (новый API)");
+    })();
   }, []);
 
   // После инициализации Rive считываем текущие значения текстовых переменных
@@ -53,9 +56,9 @@ export default function App() {
         "95 PREM": rive.getTextRunValue("95 PREM") || "",
         "92 ECO": rive.getTextRunValue("92 ECO") || "",
         "92 EURO": rive.getTextRunValue("92 EURO") || "",
-        "DIESEL": rive.getTextRunValue("DIESEL") || "",
-        "GAS": rive.getTextRunValue("GAS") || "",
-        "COFFEE": rive.getTextRunValue("COFFEE") || ""
+        DIESEL: rive.getTextRunValue("DIESEL") || "",
+        GAS: rive.getTextRunValue("GAS") || "",
+        COFFEE: rive.getTextRunValue("COFFEE") || ""
       });
     }
   }, [rive]);
@@ -63,7 +66,7 @@ export default function App() {
   // Обработчик изменения ввода
   const handleInputChange = (e, variableName) => {
     const { value } = e.target;
-    setTextValues((prevValues) => ({
+    setTextValues(prevValues => ({
       ...prevValues,
       [variableName]: value
     }));
@@ -81,17 +84,16 @@ export default function App() {
   // ---------------------------------------
   const handleRecordClick = async () => {
     if (!rive) {
-      console.error("Rive не инициализировано ещё!");
+      alert("Rive не инициализирован!");
       return;
     }
-    if (!isFFmpegLoaded) {
-      alert("FFmpeg ещё загружается, попробуйте чуть позже...");
+    if (!isFFmpegReady) {
+      alert("FFmpeg ещё не готов, попробуйте чуть позже...");
       return;
     }
 
     // 1) Перезапускаем анимацию с нуля
     try {
-      // Сбросить (seek) и потом заново запустить
       rive.pause(stateMachineName);
       rive.seek(0, stateMachineName);
       rive.play(stateMachineName);
@@ -114,7 +116,7 @@ export default function App() {
       mimeType: "video/webm; codecs=vp9"
     });
 
-    // Будем складывать полученные куски WebM в массив
+    // Массив для кусочков WebM
     const chunks = [];
     recorder.ondataavailable = (e) => {
       if (e.data.size > 0) {
@@ -122,28 +124,38 @@ export default function App() {
       }
     };
 
-    // Когда запись закончится
+    // Когда запись остановится
     recorder.onstop = async () => {
-      // Собираем финальный WebM
+      // Собираем WebM
       const webmBlob = new Blob(chunks, { type: "video/webm" });
 
-      // 4) Конвертируем WebM -> MP4 через ffmpeg.wasm
+      // Конвертируем WebM -> MP4
       setIsConverting(true);
+
       try {
-        console.log("Начинаем конвертацию в MP4...");
         const ffmpeg = ffmpegRef.current;
 
-        // Очищаем виртуальную FS, на всякий случай
-        ffmpeg.FS("unlink", "input.webm").catch(() => {});
-        ffmpeg.FS("unlink", "output.mp4").catch(() => {});
+        // Удаляем предыдущие файлы, если были (не обязательно)
+        try {
+          await ffmpeg.exec(["-y", "-i", "input.webm", "output.mp4"]);
+          // или ffmpeg.FS("unlink", "input.webm");
+          //    ffmpeg.FS("unlink", "output.mp4");
+        } catch (err) {
+          // игнорируем, если их не было
+        }
 
-        // Записываем WebM-файл во внутреннюю FS ffmpeg
-        await ffmpeg.FS("writeFile", "input.webm", await fetchFile(webmBlob));
+        // Пишем WebM-файл во внутреннюю FS ffmpeg
+        await ffmpeg.writeFile("input.webm", await fetchFile(webmBlob));
 
         // Запускаем FFmpeg
-        // Простой вариант: -i input.webm output.mp4
-        // Можно добавить параметры -pix_fmt yuv420p, -r 30, crf, и т.д.
-        await ffmpeg.run(
+        // -y: overwrite
+        // -i input.webm: входной файл
+        // -c:v libx264: кодек h264
+        // -preset fast
+        // -pix_fmt yuv420p
+        // output.mp4
+        await ffmpeg.exec([
+          "-y",
           "-i",
           "input.webm",
           "-c:v",
@@ -153,14 +165,14 @@ export default function App() {
           "-pix_fmt",
           "yuv420p",
           "output.mp4"
-        );
+        ]);
 
-        // Считываем полученный mp4
-        const data = ffmpeg.FS("readFile", "output.mp4");
+        // Читаем готовый output.mp4
+        const data = await ffmpeg.readFile("output.mp4");
         const mp4Blob = new Blob([data.buffer], { type: "video/mp4" });
-
-        // Генерируем ссылку для скачивания
         const mp4Url = URL.createObjectURL(mp4Blob);
+
+        // Скачиваем файл
         const a = document.createElement("a");
         a.style.display = "none";
         a.href = mp4Url;
@@ -170,7 +182,7 @@ export default function App() {
         document.body.removeChild(a);
         URL.revokeObjectURL(mp4Url);
 
-        console.log("MP4 готов и скачан (animation.mp4).");
+        console.log("MP4 готов (animation.mp4).");
       } catch (err) {
         console.error("Ошибка при конвертации в MP4:", err);
       } finally {
@@ -178,11 +190,11 @@ export default function App() {
       }
     };
 
-    // 5) Начинаем запись
+    // 4) Начинаем запись
     recorder.start();
     console.log("Запись запущена...");
 
-    // 8 секунд захвата
+    // Останавливаем через 8 секунд
     setTimeout(() => {
       recorder.stop();
       console.log("Запись остановлена (8 секунд).");
@@ -213,10 +225,10 @@ export default function App() {
         ))}
       </div>
 
+      {/* Кнопка записи */}
       <div style={{ marginTop: "20px" }}>
-        {/* Кнопка записи */}
         <button onClick={handleRecordClick} disabled={isConverting}>
-          {isConverting ? "Идёт конвертация..." : "Записать 8-сек. видео (MP4)"}
+          {isConverting ? "Конвертация..." : "Записать 8-сек. видео (MP4)"}
         </button>
       </div>
     </div>
