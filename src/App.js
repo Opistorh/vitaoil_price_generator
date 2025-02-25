@@ -32,7 +32,7 @@ export default function App() {
     })
   });
 
-  // Храним значения для текстовых полей (Rive textRunValue)
+  // Текстовые значения
   const [textValues, setTextValues] = useState({
     "95 PREM": "",
     "92 ECO": "",
@@ -42,23 +42,28 @@ export default function App() {
     "COFFEE": ""
   });
 
-  // Храним массив кадров (base64 PNG)
+  // Храним кадры (base64 PNG)
   const [frames, setFrames] = useState([]);
 
-  // Флаг, показывающий, идёт ли «запись» кадров
+  // Флаги
   const [isRecording, setIsRecording] = useState(false);
+  const [isConverting, setIsConverting] = useState(false);
 
-  // ffmpeg (новое API)
+  // FFmpeg
   const ffmpegRef = useRef(null);
   const [isFFmpegReady, setIsFFmpegReady] = useState(false);
 
-  // Флаг конвертации в MP4
-  const [isConverting, setIsConverting] = useState(false);
-
-  // Инициализируем ffmpeg при монтировании
+  // Инициализация FFmpeg (log: true для включения базовых логов)
   useEffect(() => {
     (async () => {
       const ffmpeg = new FFmpeg({ log: true });
+      // Подписываемся на событие логов (новый API вместо setLogger)
+      ffmpeg.on("log", ({ type, message }) => {
+        console.log(`[FFmpeg ${type}]: ${message}`);
+      });
+      // можно установить уровень логирования
+      ffmpeg.setLogLevel("info");
+
       await ffmpeg.load();
       ffmpegRef.current = ffmpeg;
       setIsFFmpegReady(true);
@@ -177,7 +182,7 @@ export default function App() {
   };
 
   // ---------------------------------------------------
-  // 2) Сконвертировать уже снятые PNG в MP4 (через ffmpeg)
+  // 2) Сконвертировать уже снятые PNG в WebM (через ffmpeg)
   // ---------------------------------------------------
   const handleConvertToVideoClick = async () => {
     if (!isFFmpegReady) {
@@ -197,71 +202,62 @@ export default function App() {
   
     try {
       const ffmpeg = ffmpegRef.current;
-      
-      // Включим логи:
-      ffmpeg.setLogger(({ type, message }) => {
-        console.log(`[FFmpeg ${type}]: ${message}`);
-      });
-      ffmpeg.setLogLevel("info");
-  
-      // Попробуем удалить старые файлы
-      // (если были в памяти FFmpeg)
+
+      // На всякий случай попробуем почистить виртуальные файлы
+      // Удалять можно выборочно, но проще вызвать "левую" команду с -i
       try {
-        await ffmpeg.exec(["-y", "-i", "frame_%04d.png", "output.mp4"]);
+        await ffmpeg.exec(["-y", "-i", "frame_%04d.png", "dummy.webm"]);
       } catch (err) {
         // игнорируем
       }
-  
-      // Записываем кадры
+
+      // Записываем кадры frame_0001.png, frame_0002.png, ...
       for (let i = 0; i < frames.length; i++) {
         const indexStr = String(i + 1).padStart(4, "0");
         const filename = `frame_${indexStr}.png`;
-  
+
         const blob = dataURLtoBlob(frames[i]);
-        // Проверяем хотя бы первый кадр
-        if (i === 0) {
-          console.log(`Пишем ${filename}, размер blob = ${blob.size} байт`);
-        }
-  
+        // Сохраняем во внутреннюю FS ffmpeg
         await ffmpeg.writeFile(filename, await fetchFile(blob));
       }
-  
+
       console.log("Запуск FFmpeg (exec)...");
+      // Собираем в output.webm (VP9):
       await ffmpeg.exec([
         "-framerate", "30",
         "-i", "frame_%04d.png",
-        "-pix_fmt", "yuv420p",
-        "-c:v", "libx264",
-        "output.mp4"
+        "-c:v", "libvpx-vp9",    // или libvpx для VP8
+        "-pix_fmt", "yuv420p",   // на всякий случай
+        "output.webm"
       ]);
-  
-      // Проверим размер output.mp4
+
+      // Проверим размер output.webm
       let outputData;
       try {
-        outputData = await ffmpeg.readFile("output.mp4");
-        console.log("Размер output.mp4:", outputData.length, "байт");
+        outputData = await ffmpeg.readFile("output.webm");
+        console.log("Размер output.webm:", outputData.length, "байт");
       } catch (err) {
-        console.error("Не удалось прочитать output.mp4:", err);
+        console.error("Не удалось прочитать output.webm:", err);
         throw err;
       }
   
       if (outputData.length === 0) {
-        throw new Error("Файл output.mp4 пуст!");
+        throw new Error("Файл output.webm пуст!");
       }
   
       // Если не 0, значит всё ок
-      const mp4Blob = new Blob([outputData.buffer], { type: "video/mp4" });
-      const mp4Url = URL.createObjectURL(mp4Blob);
+      const webmBlob = new Blob([outputData.buffer], { type: "video/webm" });
+      const webmUrl = URL.createObjectURL(webmBlob);
   
       const a = document.createElement("a");
-      a.href = mp4Url;
-      a.download = "animation.mp4";
+      a.href = webmUrl;
+      a.download = "animation.webm";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(mp4Url);
+      URL.revokeObjectURL(webmUrl);
   
-      console.log("Видео готово и скачано (animation.mp4).");
+      console.log("Видео готово и скачано (animation.webm).");
     } catch (err) {
       console.error("Ошибка при сборке видео:", err);
     } finally {
@@ -294,17 +290,17 @@ export default function App() {
         ))}
       </div>
 
+      {/* Кнопка записи PNG */}
       <div style={{ marginTop: "20px" }}>
-        {/* Кнопка записи PNG */}
         <button onClick={handleRecordPngClick} disabled={isRecording}>
           {isRecording ? "Идёт запись..." : "Записать PNG-секвенцию (8 секунд)"}
         </button>
       </div>
 
+      {/* Кнопка конвертации в WebM */}
       <div style={{ marginTop: "20px" }}>
-        {/* Кнопка конвертации в MP4 */}
         <button onClick={handleConvertToVideoClick} disabled={isConverting}>
-          {isConverting ? "Конвертация..." : "Сконвертировать в MP4"}
+          {isConverting ? "Конвертация..." : "Сконвертировать в WebM"}
         </button>
       </div>
     </div>
