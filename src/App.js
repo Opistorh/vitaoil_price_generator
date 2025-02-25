@@ -1,14 +1,29 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./styles.css";
 import { useRive, Layout, Fit, Alignment } from "@rive-app/react-canvas";
-import JSZip from "jszip"; // Библиотека для создания ZIP
+import JSZip from "jszip"; 
+import { FFmpeg } from "@ffmpeg/ffmpeg";
+import { fetchFile } from "@ffmpeg/util";
+
+// Утилита: конвертация dataURL -> Blob (нужно для ffmpeg)
+function dataURLtoBlob(dataURL) {
+  const arr = dataURL.split(",");
+  const mime = arr[0].match(/:(.*?);/)[1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new Blob([u8arr], { type: mime });
+}
 
 export default function App() {
   const stateMachineName = "State Machine 1";
 
   // Инициализируем Rive
   const { rive, RiveComponent } = useRive({
-    src: "vitaoil.riv", // Ваш .riv-файл
+    src: "vitaoil.riv", 
     stateMachines: stateMachineName,
     autoplay: true,
     layout: new Layout({
@@ -17,7 +32,7 @@ export default function App() {
     })
   });
 
-  // Храним значения для каждого текстового поля
+  // Храним значения для текстовых полей (Rive textRunValue)
   const [textValues, setTextValues] = useState({
     "95 PREM": "",
     "92 ECO": "",
@@ -27,11 +42,32 @@ export default function App() {
     "COFFEE": ""
   });
 
-  // Флаг, показывающий, идёт ли сейчас «запись» кадров
+  // Храним массив кадров (base64 PNG)
+  const [frames, setFrames] = useState([]);
+
+  // Флаг, показывающий, идёт ли «запись» кадров
   const [isRecording, setIsRecording] = useState(false);
 
+  // ffmpeg (новое API)
+  const ffmpegRef = useRef(null);
+  const [isFFmpegReady, setIsFFmpegReady] = useState(false);
+
+  // Флаг конвертации в MP4
+  const [isConverting, setIsConverting] = useState(false);
+
+  // Инициализируем ffmpeg при монтировании
   useEffect(() => {
-    // Когда Rive готов, считываем начальные значения текстовых полей
+    (async () => {
+      const ffmpeg = new FFmpeg({ log: false });
+      await ffmpeg.load();
+      ffmpegRef.current = ffmpeg;
+      setIsFFmpegReady(true);
+      console.log("FFmpeg загружен (новый API).");
+    })();
+  }, []);
+
+  // После инициализации Rive, считываем текущие значения текстовых полей
+  useEffect(() => {
     if (rive) {
       setTextValues({
         "95 PREM": rive.getTextRunValue("95 PREM") || "",
@@ -44,36 +80,33 @@ export default function App() {
     }
   }, [rive]);
 
-  // Обработчик изменения ввода
+  // Обновление input
   const handleInputChange = (e, variableName) => {
     const { value } = e.target;
-    setTextValues(prevValues => ({
-      ...prevValues,
-      [variableName]: value
-    }));
+    setTextValues(prev => ({ ...prev, [variableName]: value }));
   };
 
-  // Обновляем значение текстовой переменной в Rive
+  // Применяем изменение в Rive
   const handleApplyClick = (variableName) => {
     if (rive) {
       rive.setTextRunValue(variableName, textValues[variableName]);
     }
   };
 
-  // ---------------------------------------
-  // Функция записи PNG-секвенции (8 секунд)
-  // ---------------------------------------
-  const handleRecordClick = () => {
+  // --------------------------------
+  // 1) Записать PNG-секвенцию (8 сек)
+  // --------------------------------
+  const handleRecordPngClick = () => {
     if (!rive) {
       alert("Rive не инициализирован!");
       return;
     }
     if (isRecording) {
-      alert("Запись уже идёт...");
+      alert("Сейчас уже идёт запись кадров!");
       return;
     }
 
-    // Сбрасываем и запускаем анимацию заново
+    // Сбрасываем анимацию
     try {
       rive.stop(stateMachineName);
       rive.play(stateMachineName);
@@ -83,68 +116,54 @@ export default function App() {
       return;
     }
 
-    // Ищем canvas
+    // Очищаем старые кадры, если есть
+    setFrames([]);
+
+    // Находим canvas
     const canvas = document.querySelector("canvas");
     if (!canvas) {
       console.error("Canvas с Rive не найден!");
       return;
     }
 
-    // Начинаем «запись» кадров
+    // Начинаем «запись»
     setIsRecording(true);
 
-    const frames = [];
+    const newFrames = [];
     const fps = 30;
-    const interval = 1000 / fps; // период в мс
-
+    const interval = 1000 / fps; 
     let elapsed = 0;
     const maxDuration = 8000; // 8 секунд
 
-    // Функция, которая будет вызываться каждые interval мс
-    const captureFrame = () => {
+    const timerId = setInterval(() => {
       elapsed += interval;
-      // Снимаем скриншот canvas
       const dataURL = canvas.toDataURL("image/png");
-      frames.push(dataURL);
-      console.log(`Кадр #${frames.length} захвачен`);
-
+      newFrames.push(dataURL);
+      console.log(`Кадр #${newFrames.length} снят.`);
       if (elapsed >= maxDuration) {
-        // Время вышло, останавливаем
         clearInterval(timerId);
-        finishRecording(frames);
+        finishRecording(newFrames);
       }
-    };
+    }, interval);
 
-    // Запускаем setInterval
-    const timerId = setInterval(captureFrame, interval);
+    // Когда заканчивается
+    const finishRecording = async (collectedFrames) => {
+      setFrames(collectedFrames);
+      setIsRecording(false);
+      console.log(`Запись завершена, всего кадров: ${collectedFrames.length}`);
 
-    // Если вдруг нужно остановить ещё и по клику — можно хранить timerId и вызывать clearInterval
-
-    // Когда запись заканчивается, собираем ZIP:
-    const finishRecording = (collectedFrames) => {
-      console.log("Запись завершена. Идёт упаковка PNG в ZIP...");
-
+      // 2) Создаём ZIP из PNG
       const zip = new JSZip();
-
-      // Добавляем файлы в архив
       collectedFrames.forEach((dataUrl, i) => {
-        // Имя файла: frame_0001.png, frame_0002.png, ...
         const filename = `frame_${String(i + 1).padStart(4, "0")}.png`;
-
-        // dataUrl имеет формат "data:image/png;base64,...."
-        // Нужно вырезать "base64," и оставшуюся часть сохранить в zip как base64
-        const base64Data = dataUrl.substring(dataUrl.indexOf(",") + 1);
-
-        // Добавляем в zip
+        const base64Data = dataUrl.split(",")[1]; // после "base64,"
         zip.file(filename, base64Data, { base64: true });
       });
 
-      // Генерируем ZIP как Blob
+      // Генерируем ZIP (Blob) и скачиваем
       zip.generateAsync({ type: "blob" }).then(blob => {
-        // Скачиваем как "frames.zip"
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
-        a.style.display = "none";
         a.href = url;
         a.download = "frames.zip";
         document.body.appendChild(a);
@@ -152,10 +171,83 @@ export default function App() {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
 
-        setIsRecording(false);
-        console.log("Готово! frames.zip скачан.");
+        console.log("frames.zip скачан.");
       });
     };
+  };
+
+  // ---------------------------------------------------
+  // 2) Сконвертировать уже снятые PNG в MP4 (через ffmpeg)
+  // ---------------------------------------------------
+  const handleConvertToVideoClick = async () => {
+    if (!isFFmpegReady) {
+      alert("FFmpeg ещё не готов, попробуйте позже...");
+      return;
+    }
+    if (!frames || frames.length === 0) {
+      alert("Пока нет снятых кадров. Сначала нажмите «Записать PNG-секвенцию»!");
+      return;
+    }
+    if (isConverting) {
+      alert("Уже идёт конвертация!");
+      return;
+    }
+
+    setIsConverting(true);
+    try {
+      const ffmpeg = ffmpegRef.current;
+
+      // Удаляем старые файлы во внутренней FS
+      // (на случай, если раньше была запись)
+      try {
+        // Пробуем пачкой удалить, игнорируем ошибки
+        await ffmpeg.exec(["-y", "-i", "frame_%04d.png", "output.mp4"]);
+      } catch (e) {
+        /* ignore */
+      }
+
+      // Записываем кадры frame_0001.png, frame_0002.png... 
+      for (let i = 0; i < frames.length; i++) {
+        const indexStr = String(i + 1).padStart(4, "0"); 
+        const filename = `frame_${indexStr}.png`;
+
+        // конвертируем dataURL в Blob
+        const blob = dataURLtoBlob(frames[i]); 
+        // пишем в виртуальную FS
+        await ffmpeg.writeFile(filename, await fetchFile(blob));
+      }
+
+      // Собираем в output.mp4
+      // -framerate 30, -i frame_%04d.png => output.mp4
+      // -pix_fmt yuv420p для совместимости с плеерами
+      await ffmpeg.exec([
+        "-framerate", "30",
+        "-i", "frame_%04d.png",
+        "-pix_fmt", "yuv420p",
+        "-c:v", "libx264",
+        "output.mp4"
+      ]);
+
+      // Читаем результат
+      const data = await ffmpeg.readFile("output.mp4");
+      const mp4Blob = new Blob([data.buffer], { type: "video/mp4" });
+      const mp4Url = URL.createObjectURL(mp4Blob);
+
+      // Предлагаем скачать MP4
+      const a = document.createElement("a");
+      a.href = mp4Url;
+      a.download = "animation.mp4";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(mp4Url);
+
+      console.log("Видео готово и скачано (animation.mp4).");
+    } catch (err) {
+      console.error("Ошибка при сборке видео:", err);
+    } finally {
+      setIsConverting(false);
+    }
   };
 
   return (
@@ -182,10 +274,17 @@ export default function App() {
         ))}
       </div>
 
-      {/* Кнопка записи PNG */}
       <div style={{ marginTop: "20px" }}>
-        <button onClick={handleRecordClick} disabled={isRecording}>
+        {/* Кнопка записи PNG */}
+        <button onClick={handleRecordPngClick} disabled={isRecording}>
           {isRecording ? "Идёт запись..." : "Записать PNG-секвенцию (8 секунд)"}
+        </button>
+      </div>
+
+      <div style={{ marginTop: "20px" }}>
+        {/* Кнопка конвертации в MP4 */}
+        <button onClick={handleConvertToVideoClick} disabled={isConverting}>
+          {isConverting ? "Конвертация..." : "Сконвертировать в MP4"}
         </button>
       </div>
     </div>
