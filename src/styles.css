@@ -5,7 +5,7 @@ body {
 .App {
   font-family: sans-serif;
   /*text-align: center;*/
-  font-size: 24px;
+  font-size: 16px;
   color: #efcb7d;
 }
 
@@ -19,4 +19,8 @@ body {
   left: 0;
   right: 0;
   margin: auto auto;*/
+}
+
+.text-run-control {
+  margin-top: 8px;
 }

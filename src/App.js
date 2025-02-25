@@ -285,7 +285,7 @@ export default function App() {
       <div className="container">
         <RiveComponent />
       </div>
-
+  
       <div className="controls">
         {Object.keys(textValues).map(variableName => (
           <div className="text-run-control" key={variableName}>
@@ -303,20 +303,28 @@ export default function App() {
           </div>
         ))}
       </div>
-
+  
       {/* Кнопка записи PNG */}
-      <div style={{ marginTop: "20px" }}>
-        <button onClick={handleRecordPngClick} disabled={isRecording}>
+      <div style={{ marginTop: "20px"}}>
+        <button 
+        onClick={handleRecordPngClick} 
+        disabled={isRecording} 
+        style={{ fontSize: "16px", padding: "10px" }}>
           {isRecording ? "Идёт запись..." : "Записать PNG-секвенцию (8 секунд)"}
         </button>
       </div>
-
+  
       {/* Кнопка конвертации в WebM */}
       <div style={{ marginTop: "20px" }}>
-        <button onClick={handleConvertToVideoClick} disabled={isConverting}>
+        <button
+         onClick={handleConvertToVideoClick}
+         disabled={isConverting || frames.length === 0}
+         style={{ fontSize: "16px", padding: "10px" }}
+        >
           {isConverting ? "Конвертация..." : "Сконвертировать в WebM"}
         </button>
       </div>
     </div>
   );
+  
 }
