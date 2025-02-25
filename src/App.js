@@ -23,9 +23,9 @@ export default function App() {
     "95 PREM": "",
     "92 ECO": "",
     "92 EURO": "",
-    DIESEL: "",
-    GAS: "",
-    COFFEE: ""
+    "DIESEL": "",
+    "GAS": "",
+    "COFFEE": ""
   });
 
   // Флаг загрузки ffmpeg / хода конвертации
@@ -53,9 +53,9 @@ export default function App() {
         "95 PREM": rive.getTextRunValue("95 PREM") || "",
         "92 ECO": rive.getTextRunValue("92 ECO") || "",
         "92 EURO": rive.getTextRunValue("92 EURO") || "",
-        DIESEL: rive.getTextRunValue("DIESEL") || "",
-        GAS: rive.getTextRunValue("GAS") || "",
-        COFFEE: rive.getTextRunValue("COFFEE") || ""
+        "DIESEL": rive.getTextRunValue("DIESEL") || "",
+        "GAS": rive.getTextRunValue("GAS") || "",
+        "COFFEE": rive.getTextRunValue("COFFEE") || ""
       });
     }
   }, [rive]);
