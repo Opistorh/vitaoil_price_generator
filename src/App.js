@@ -1,39 +1,61 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./styles.css";
 import { useRive, Layout, Fit, Alignment } from "@rive-app/react-canvas";
+// ffmpeg.wasm — офлайн FFmpeg в браузере
+import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg";
 
 export default function App() {
   const stateMachineName = "State Machine 1";
+
+  // Инициализируем Rive
   const { rive, RiveComponent } = useRive({
-    src: "vitaoil.riv",
-    stateMachines: stateMachineName,
+    src: "vitaoil.riv",             // Ваш .riv-файл
+    stateMachines: stateMachineName, // Название State Machine в редакторе Rive
     autoplay: true,
     layout: new Layout({
       fit: Fit.Cover,
       alignment: Alignment.Center,
-    }),
+    })
   });
 
-  // Храним значения для каждого текстового поля в объекте
+  // Храним значения для каждого текстового поля
   const [textValues, setTextValues] = useState({
     "95 PREM": "",
     "92 ECO": "",
     "92 EURO": "",
-    "DIESEL": "",
-    "GAS": "",
-    "COFFEE": "",
+    DIESEL: "",
+    GAS: "",
+    COFFEE: ""
   });
 
-  // После инициализации Rive, считываем текущие значения текстовых переменных
+  // Флаг загрузки ffmpeg / хода конвертации
+  const [isConverting, setIsConverting] = useState(false);
+
+  // Загружаем ffmpeg лишь однажды
+  const ffmpegRef = useRef(null);
+  const [isFFmpegLoaded, setIsFFmpegLoaded] = useState(false);
+
+  useEffect(() => {
+    // Инициализируем ffmpeg при первой загрузке
+    const initFFmpeg = async () => {
+      ffmpegRef.current = createFFmpeg({ log: false });
+      await ffmpegRef.current.load();
+      setIsFFmpegLoaded(true);
+      console.log("FFmpeg loaded");
+    };
+    initFFmpeg();
+  }, []);
+
+  // После инициализации Rive считываем текущие значения текстовых переменных
   useEffect(() => {
     if (rive) {
       setTextValues({
         "95 PREM": rive.getTextRunValue("95 PREM") || "",
         "92 ECO": rive.getTextRunValue("92 ECO") || "",
         "92 EURO": rive.getTextRunValue("92 EURO") || "",
-        "DIESEL": rive.getTextRunValue("DIESEL") || "",
-        "GAS": rive.getTextRunValue("GAS") || "",
-        "COFFEE": rive.getTextRunValue("COFFEE") || "",
+        DIESEL: rive.getTextRunValue("DIESEL") || "",
+        GAS: rive.getTextRunValue("GAS") || "",
+        COFFEE: rive.getTextRunValue("COFFEE") || ""
       });
     }
   }, [rive]);
@@ -43,86 +65,133 @@ export default function App() {
     const { value } = e.target;
     setTextValues((prevValues) => ({
       ...prevValues,
-      [variableName]: value,
+      [variableName]: value
     }));
   };
 
-  // Обработчик нажатия кнопки "Применить"
+  // Обработчик нажатия кнопки "Применить" (обновляет Rive-текст)
   const handleApplyClick = (variableName) => {
     if (rive) {
       rive.setTextRunValue(variableName, textValues[variableName]);
     }
   };
 
-  // ------------------------------
-  // Запись Canvas в WebM и скачивание
-  // ------------------------------
-  const handleRecordClick = () => {
-    // Находим canvas, который использует Rive:
-    // Можно искать по селектору "canvas", если Rive один.
+  // ---------------------------------------
+  // Главная функция записи и скачивания MP4
+  // ---------------------------------------
+  const handleRecordClick = async () => {
+    if (!rive) {
+      console.error("Rive не инициализировано ещё!");
+      return;
+    }
+    if (!isFFmpegLoaded) {
+      alert("FFmpeg ещё загружается, попробуйте чуть позже...");
+      return;
+    }
+
+    // 1) Перезапускаем анимацию с нуля
+    try {
+      // Сбросить (seek) и потом заново запустить
+      rive.pause(stateMachineName);
+      rive.seek(0, stateMachineName);
+      rive.play(stateMachineName);
+      console.log("Анимация сброшена и запущена с нуля.");
+    } catch (err) {
+      console.error("Ошибка при сбросе анимации:", err);
+      return;
+    }
+
+    // 2) Ищем canvas
     const canvas = document.querySelector("canvas");
     if (!canvas) {
       console.error("Canvas с Rive не найден!");
       return;
     }
 
-    try {
-      // Захватываем поток с 30 кадрами/сек (или 60, если хотим)
-      const stream = canvas.captureStream(30);
+    // 3) Захватываем поток (например, 30 fps)
+    const stream = canvas.captureStream(30);
+    const recorder = new MediaRecorder(stream, {
+      mimeType: "video/webm; codecs=vp9"
+    });
 
-      // Настраиваем MediaRecorder
-      const recorder = new MediaRecorder(stream, {
-        mimeType: "video/webm; codecs=vp9",
-      });
+    // Будем складывать полученные куски WebM в массив
+    const chunks = [];
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) {
+        chunks.push(e.data);
+      }
+    };
 
-      // Массив для собираемых кусочков WebM
-      const chunks = [];
+    // Когда запись закончится
+    recorder.onstop = async () => {
+      // Собираем финальный WebM
+      const webmBlob = new Blob(chunks, { type: "video/webm" });
 
-      // Когда появляется новый кусочек данных - складываем в массив
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) {
-          chunks.push(e.data);
-        }
-      };
+      // 4) Конвертируем WebM -> MP4 через ffmpeg.wasm
+      setIsConverting(true);
+      try {
+        console.log("Начинаем конвертацию в MP4...");
+        const ffmpeg = ffmpegRef.current;
 
-      // Когда запись останавливается - собираем Blob и скачиваем
-      recorder.onstop = () => {
-        const blob = new Blob(chunks, { type: "video/webm" });
-        const url = URL.createObjectURL(blob);
+        // Очищаем виртуальную FS, на всякий случай
+        ffmpeg.FS("unlink", "input.webm").catch(() => {});
+        ffmpeg.FS("unlink", "output.mp4").catch(() => {});
 
-        // Создаём временную ссылку и «кликаем» по ней, чтобы скачать
+        // Записываем WebM-файл во внутреннюю FS ffmpeg
+        await ffmpeg.FS("writeFile", "input.webm", await fetchFile(webmBlob));
+
+        // Запускаем FFmpeg
+        // Простой вариант: -i input.webm output.mp4
+        // Можно добавить параметры -pix_fmt yuv420p, -r 30, crf, и т.д.
+        await ffmpeg.run(
+          "-i",
+          "input.webm",
+          "-c:v",
+          "libx264",
+          "-preset",
+          "fast",
+          "-pix_fmt",
+          "yuv420p",
+          "output.mp4"
+        );
+
+        // Считываем полученный mp4
+        const data = ffmpeg.FS("readFile", "output.mp4");
+        const mp4Blob = new Blob([data.buffer], { type: "video/mp4" });
+
+        // Генерируем ссылку для скачивания
+        const mp4Url = URL.createObjectURL(mp4Blob);
         const a = document.createElement("a");
         a.style.display = "none";
-        a.href = url;
-        a.download = "animation.webm"; // Имя файла, под которым скачается
+        a.href = mp4Url;
+        a.download = "animation.mp4";
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
+        URL.revokeObjectURL(mp4Url);
 
-        // Освободим URL-объект
-        URL.revokeObjectURL(url);
+        console.log("MP4 готов и скачан (animation.mp4).");
+      } catch (err) {
+        console.error("Ошибка при конвертации в MP4:", err);
+      } finally {
+        setIsConverting(false);
+      }
+    };
 
-        console.log("Видео сохранено (animation.webm).");
-      };
+    // 5) Начинаем запись
+    recorder.start();
+    console.log("Запись запущена...");
 
-      // Запускаем запись
-      recorder.start();
-      console.log("Запись видео начата...");
-
-      // Прекращаем запись через 5 секунд (пример)
-      setTimeout(() => {
-        recorder.stop();
-        console.log("Запись видео остановлена.");
-      }, 5000);
-    } catch (err) {
-      console.error("Ошибка при записи видео:", err);
-    }
+    // 8 секунд захвата
+    setTimeout(() => {
+      recorder.stop();
+      console.log("Запись остановлена (8 секунд).");
+    }, 8000);
   };
 
   return (
     <div className="App">
       <div className="container">
-        {/* Сам Rive-компонент */}
         <RiveComponent />
       </div>
 
@@ -144,9 +213,11 @@ export default function App() {
         ))}
       </div>
 
-      {/* Кнопка записи */}
       <div style={{ marginTop: "20px" }}>
-        <button onClick={handleRecordClick}>Записать 5-секундное видео</button>
+        {/* Кнопка записи */}
+        <button onClick={handleRecordClick} disabled={isConverting}>
+          {isConverting ? "Идёт конвертация..." : "Записать 8-сек. видео (MP4)"}
+        </button>
       </div>
     </div>
   );
