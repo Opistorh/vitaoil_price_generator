@@ -207,7 +207,7 @@ export default function App() {
       // На всякий случай попробуем почистить виртуальные файлы
       // Удалять можно выборочно, но проще вызвать "левую" команду с -i
       try {
-        await ffmpeg.exec(["-y", "-i", "frame_%04d.png", "dummy.webm"]);
+        await ffmpeg.exec(["-v", "verbose","-y", "-i", "frame_%04d.png", "dummy.webm"]);
       } catch (err) {
         // игнорируем
       }
@@ -218,24 +218,35 @@ export default function App() {
         const filename = `frame_${indexStr}.png`;
 
         const blob = dataURLtoBlob(frames[i]);
+        console.log(`Пишем ${filename}, размер blob = ${blob.size} байт...`);
         // Сохраняем во внутреннюю FS ffmpeg
         await ffmpeg.writeFile(filename, await fetchFile(blob));
+        try {
+          const test = await ffmpeg.readFile(filename);
+          console.log("Записалось:", filename, "размер =", test.length);
+        } catch (err) {
+          console.error("Не удалось прочитать после записи", filename, err);
+        }
+        
       }
 
       console.log("Запуск FFmpeg (exec)...");
       // Собираем в output.webm (VP9):
       await ffmpeg.exec([
-        "-framerate", "30",
-        "-i", "frame_%04d.png",
-        "-c:v", "libvpx-vp9",    // или libvpx для VP8
-        "-pix_fmt", "yuv420p",   // на всякий случай
-        "output.webm"
-      ]);
+  "-framerate", "30",            // или 30, как вам нужно
+  "-start_number", "1",         // явно говорим, что первый кадр — frame_0001.png
+  "-i", "frame_%04d.png",       // шаблон
+  //"-frames:v", "64",             // ровно 8 кадров
+  "-c:v", "libx264",
+  "-pix_fmt", "yuv420p",
+  "output.mp4",
+]);
+
 
       // Проверим размер output.webm
       let outputData;
       try {
-        outputData = await ffmpeg.readFile("output.webm");
+        outputData = await ffmpeg.readFile("output.mp4");
         console.log("Размер output.webm:", outputData.length, "байт");
       } catch (err) {
         console.error("Не удалось прочитать output.webm:", err);
@@ -243,7 +254,7 @@ export default function App() {
       }
   
       if (outputData.length === 0) {
-        throw new Error("Файл output.webm пуст!");
+        throw new Error("Файл output.mp4 пуст!");
       }
   
       // Если не 0, значит всё ок
@@ -252,13 +263,13 @@ export default function App() {
   
       const a = document.createElement("a");
       a.href = webmUrl;
-      a.download = "animation.webm";
+      a.download = "animation.mp4";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(webmUrl);
   
-      console.log("Видео готово и скачано (animation.webm).");
+      console.log("Видео готово и скачано (animation.mp4).");
     } catch (err) {
       console.error("Ошибка при сборке видео:", err);
     } finally {
