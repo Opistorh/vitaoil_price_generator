@@ -181,57 +181,52 @@ export default function App() {
   // ---------------------------------------------------
   const handleConvertToVideoClick = async () => {
     if (!isFFmpegReady) {
-      alert("FFmpeg ещё не готов, попробуйте позже...");
+      alert("FFmpeg ещё не готов...");
       return;
     }
     if (!frames || frames.length === 0) {
-      alert("Пока нет снятых кадров. Сначала нажмите «Записать PNG-секвенцию»!");
+      alert("Нет кадров, сначала запишите PNG.");
       return;
     }
     if (isConverting) {
       alert("Уже идёт конвертация!");
       return;
     }
-
+  
     setIsConverting(true);
+  
     try {
       const ffmpeg = ffmpegRef.current;
-
-      // Удаляем старые файлы во внутренней FS
-      // (на случай, если раньше была запись)
+      
+      // Включим логи:
+      ffmpeg.setLogger(({ type, message }) => {
+        console.log(`[FFmpeg ${type}]: ${message}`);
+      });
+      ffmpeg.setLogLevel("info");
+  
+      // Попробуем удалить старые файлы
+      // (если были в памяти FFmpeg)
       try {
-        // Пробуем пачкой удалить, игнорируем ошибки
         await ffmpeg.exec(["-y", "-i", "frame_%04d.png", "output.mp4"]);
-      } catch (e) {
-        /* ignore */
+      } catch (err) {
+        // игнорируем
       }
-
-      // Записываем кадры frame_0001.png, frame_0002.png... 
+  
+      // Записываем кадры
       for (let i = 0; i < frames.length; i++) {
-        const indexStr = String(i + 1).padStart(4, "0"); 
+        const indexStr = String(i + 1).padStart(4, "0");
         const filename = `frame_${indexStr}.png`;
-
-        // конвертируем dataURL в Blob
-        const blob = dataURLtoBlob(frames[i]); 
-        // пишем в виртуальную FS
-        await ffmpeg.writeFile(filename, await fetchFile(blob));
-
-        // Например, после writeFile:
-        await ffmpeg.writeFile("frame_0001.png", await fetchFile(blob));
-
-        // Можете попробовать:
-        try {
-          const testData = await ffmpeg.readFile("frame_0001.png");
-          console.log("Считали frame_0001.png, размер:", testData.length);
-        } catch (e) {
-          console.error("Не удалось прочитать frame_0001.png:", e);
+  
+        const blob = dataURLtoBlob(frames[i]);
+        // Проверяем хотя бы первый кадр
+        if (i === 0) {
+          console.log(`Пишем ${filename}, размер blob = ${blob.size} байт`);
         }
-
+  
+        await ffmpeg.writeFile(filename, await fetchFile(blob));
       }
-
-      // Собираем в output.mp4
-      // -framerate 30, -i frame_%04d.png => output.mp4
-      // -pix_fmt yuv420p для совместимости с плеерами
+  
+      console.log("Запуск FFmpeg (exec)...");
       await ffmpeg.exec([
         "-framerate", "30",
         "-i", "frame_%04d.png",
@@ -239,13 +234,25 @@ export default function App() {
         "-c:v", "libx264",
         "output.mp4"
       ]);
-
-      // Читаем результат
-      const data = await ffmpeg.readFile("output.mp4");
-      const mp4Blob = new Blob([data.buffer], { type: "video/mp4" });
+  
+      // Проверим размер output.mp4
+      let outputData;
+      try {
+        outputData = await ffmpeg.readFile("output.mp4");
+        console.log("Размер output.mp4:", outputData.length, "байт");
+      } catch (err) {
+        console.error("Не удалось прочитать output.mp4:", err);
+        throw err;
+      }
+  
+      if (outputData.length === 0) {
+        throw new Error("Файл output.mp4 пуст!");
+      }
+  
+      // Если не 0, значит всё ок
+      const mp4Blob = new Blob([outputData.buffer], { type: "video/mp4" });
       const mp4Url = URL.createObjectURL(mp4Blob);
-
-      // Предлагаем скачать MP4
+  
       const a = document.createElement("a");
       a.href = mp4Url;
       a.download = "animation.mp4";
@@ -253,7 +260,7 @@ export default function App() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(mp4Url);
-
+  
       console.log("Видео готово и скачано (animation.mp4).");
     } catch (err) {
       console.error("Ошибка при сборке видео:", err);
@@ -261,6 +268,7 @@ export default function App() {
       setIsConverting(false);
     }
   };
+  
 
   return (
     <div className="App">
