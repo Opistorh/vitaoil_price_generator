@@ -91,11 +91,10 @@ export default function App() {
       alert("FFmpeg ещё не готов, попробуйте чуть позже...");
       return;
     }
-
-    // 1) Перезапускаем анимацию с нуля
+  
     try {
-      rive.pause(stateMachineName);
-      rive.seek(0, stateMachineName);
+      // Сбрасываем и запускаем анимацию заново
+      rive.stop(stateMachineName); 
       rive.play(stateMachineName);
       console.log("Анимация сброшена и запущена с нуля.");
     } catch (err) {
