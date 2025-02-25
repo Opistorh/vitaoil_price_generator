@@ -56,20 +56,21 @@ export default function App() {
   // Инициализация FFmpeg (log: true для включения базовых логов)
   useEffect(() => {
     (async () => {
+      // Указываем log: true, чтобы включить базовый вывод
       const ffmpeg = new FFmpeg({ log: true });
-      // Подписываемся на событие логов (новый API вместо setLogger)
+  
+      // Вместо setLogger и setLogLevel, теперь используем событие:
       ffmpeg.on("log", ({ type, message }) => {
         console.log(`[FFmpeg ${type}]: ${message}`);
       });
-      // можно установить уровень логирования
-      ffmpeg.setLogLevel("info");
-
+  
       await ffmpeg.load();
       ffmpegRef.current = ffmpeg;
       setIsFFmpegReady(true);
       console.log("FFmpeg загружен (новый API).");
     })();
   }, []);
+  
 
   // После инициализации Rive, считываем текущие значения текстовых полей
   useEffect(() => {
