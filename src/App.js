@@ -24,35 +24,52 @@ function getProgressBar(percent, barLength = 20) {
   return `[${bar}] ${percent.toFixed(0)}%`;
 }
 
+// Функция разбора лога: подсвечивает часть с прогресс-баром
+function parseLog(log) {
+  // Поищем что-то вида [##--] 25%
+  const progressBarRegex = /\[[#-]+\]\s?\d+%/;
+  const match = log.match(progressBarRegex);
+
+  // Если прогресс-бара в строке нет, выводим целиком белым
+  if (!match) {
+    return log;
+  }
+
+  // Иначе "рвём" строку, а нужный кусок красим в зелёный
+  const index = match.index;
+  const progressPart = match[0];
+  const before = log.slice(0, index);
+  const after = log.slice(index + progressPart.length);
+
+  return (
+    <>
+      {before}
+      <span style={{ color: "#00FF00" }}>{progressPart}</span>
+      {after}
+    </>
+  );
+}
+
 export default function App() {
   const stateMachineName = "State Machine 1";
 
   // Логи и функция для добавления лог-сообщений
   const [logs, setLogs] = useState([]);
 
-  // Эта функция добавляет новую строку лога (как у вас было)
   function addLog(message) {
     setLogs((prevLogs) => [message, ...prevLogs].slice(0, 200));
     console.log(message);
   }
 
-  // А эта обновляет последнюю добавленную строку,
-  // чтобы она не плодила новые записи, а «заменяла» предыдущую
   function updateLastLog(newMessage) {
     setLogs((prevLogs) => {
       if (prevLogs.length === 0) {
-        // Если вдруг лога ещё нет, просто добавим новую строку
         return [newMessage];
       }
-      // Клонируем
       const newLogs = [...prevLogs];
-      // Поскольку "новая" запись у нас в начале массива (индекс 0),
-      // заменяем именно её.
       newLogs[0] = newMessage;
       return newLogs;
     });
-    // Для консоли — покажем в одной строке, если поддерживается \r,
-    // но часто браузер всё равно сделает перенос. Ничего страшного.
     console.log("\r" + newMessage);
   }
 
@@ -151,7 +168,7 @@ export default function App() {
     setLogs([]); // очистим логи для нового прогона
 
     try {
-      // Шаг 1: Запуск/сброс анимации
+      // Шаг 1
       addLog("Шаг 1/5: Запуск анимации...");
       rive.stop(stateMachineName);
       rive.play(stateMachineName);
@@ -181,7 +198,6 @@ export default function App() {
           const newPercent = Math.floor((currentFrame / totalFrames) * 100);
           if (newPercent !== progressPercent) {
             progressPercent = newPercent;
-            // Вместо addLog — updateLastLog, чтобы не спамить новыми строками
             updateLastLog(
               `Шаг 2/5: Запись кадров: ${getProgressBar(progressPercent)}`
             );
@@ -193,10 +209,9 @@ export default function App() {
           }
         }, interval);
       });
-      // Допишем финальный итог
       updateLastLog(`Шаг 2/5: Запись кадров завершена, всего ${frames.length} кадров.`);
 
-      // Шаг 3: Подготовка кадров для FFmpeg
+      // Шаг 3
       addLog("Шаг 3/5: Подготовка кадров...");
       const ffmpeg = ffmpegRef.current;
 
@@ -204,10 +219,10 @@ export default function App() {
       try {
         await ffmpeg.exec(["-v", "error", "-y", "-i", "frame_%04d.png", "dummy.webm"]);
       } catch {
-        // игнорируем
+        // Игнорируем ошибку
       }
 
-      // Загружаем кадры во внутреннюю ФС...
+      // Загружаем кадры
       addLog("   Загружаем кадры во внутреннюю ФС...");
       for (let i = 0; i < frames.length; i++) {
         const indexStr = String(i + 1).padStart(4, "0");
@@ -215,16 +230,15 @@ export default function App() {
         const blob = dataURLtoBlob(frames[i]);
         await ffmpeg.writeFile(filename, await fetchFile(blob));
 
-        // Прогресс подготовки
         const percent = Math.floor(((i + 1) / frames.length) * 100);
         updateLastLog(`Шаг 3/5: Подготовка кадров: ${getProgressBar(percent)}`);
       }
       updateLastLog("Шаг 3/5: Подготовка кадров — завершена.");
 
-      // Шаг 4: Сборка видео (прогресс из пакетов)
+      // Шаг 4: Сборка
       addLog("Шаг 4/5: Сборка видео (MP4, libx264)...");
       let buildCount = 0;
-      const TOTAL_PACKETS = 80; // Условно знаем, что ffmpeg даёт ~80 событий
+      const TOTAL_PACKETS = 80; // Условная оценка
       ffmpeg.on("progress", () => {
         buildCount++;
         const percent = Math.min(
@@ -277,7 +291,6 @@ export default function App() {
     }
   };
 
-  // Простые стили
   const containerStyle = {
     maxWidth: "320px",
     margin: "0 auto",
@@ -294,14 +307,12 @@ export default function App() {
   return (
     <div className="App" style={{ fontFamily: "sans-serif", padding: "1rem" }}>
       <div style={containerStyle}>
-        {/* Rive-анимация */}
         <div style={riveStyle}>
           <RiveComponent />
         </div>
 
         {!isProcessing && (
           <>
-            {/* Инпуты */}
             <div
               className="controls"
               style={{
@@ -336,7 +347,6 @@ export default function App() {
               ))}
             </div>
 
-            {/* Кнопка */}
             <div style={{ marginTop: "20px", ...fullWidthStyle }}>
               <button
                 onClick={handleRecordAndDownloadClick}
@@ -349,7 +359,7 @@ export default function App() {
           </>
         )}
 
-        {/* Логи */}
+        {/* "Консоль" логов */}
         <div style={{ marginTop: "20px", ...fullWidthStyle }}>
           <div
             style={{
@@ -364,11 +374,11 @@ export default function App() {
                 key={i}
                 style={{
                   marginBottom: "0.2rem",
-                  color: "#00FF00",
+                  color: "#FFFFFF",
                   fontSize: "10px"
                 }}
               >
-                {log}
+                {parseLog(log)}
               </div>
             ))}
           </div>
