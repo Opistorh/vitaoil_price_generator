@@ -25,7 +25,7 @@ export default function App() {
 
   // Хелпер для записи лога на экран + в консоль
   function addLog(message) {
-    setLogs((prevLogs) => [message, ...prevLogs].slice(0, 200)); // храним только 200 последних
+    setLogs((prevLogs) => [message, ...prevLogs].slice(0, 200));
     console.log(message);
   }
 
@@ -57,7 +57,7 @@ export default function App() {
   // Признак занятости (запись+конвертация)
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Инициализация FFmpeg (log: true для включения базовых логов)
+  // Инициализация FFmpeg
   useEffect(() => {
     (async () => {
       const ffmpeg = new FFmpeg({ log: true });
@@ -87,14 +87,34 @@ export default function App() {
     }
   }, [rive]);
 
-  // Автообновление в Rive при изменении input
+  // ВАЛИДАЦИЯ: цены на топливо (до трёх цифр, потом точка, потом до двух цифр) или пусто.
+  // COFFEE: только целое число или пусто.
   const handleInputChange = (e, variableName) => {
     const { value } = e.target;
-    setTextValues((prev) => ({ ...prev, [variableName]: value }));
-    if (rive) {
-      rive.setTextRunValue(variableName, value);
-      addLog(`Поле "${variableName}" изменено на "${value}"`);
+
+    let pattern;
+    if (variableName === "COFFEE") {
+      // Разрешаем ввод только целых чисел (при желании — ограничьте количество цифр)
+      pattern = /^\d{0,4}$/; 
+      // Напр.: до 4 цифр в числе, чтобы user мог ввести 9999. Можно менять по необходимости.
+    } else {
+      // Разрешаем ввод вида:
+      //  — вообще пусто
+      //  — 1-3 цифры (без точки)
+      //  — 1-3 цифры + точка + 0-2 цифры (но без лишних символов)
+      pattern = /^\d{0,3}(\.\d{0,2})?$/;
     }
+
+    // Если новое значение либо пустое, либо подходит под шаблон — обновляем state и Rive
+    if (value === "" || pattern.test(value)) {
+      setTextValues((prev) => ({ ...prev, [variableName]: value }));
+      if (rive) {
+        rive.setTextRunValue(variableName, value);
+        addLog(`Поле "${variableName}" изменено на "${value}"`);
+      }
+    }
+    // Иначе просто игнорируем (не обновляем state),
+    // что не даёт пользователю вводить запрещённые символы.
   };
 
   // Единая функция: записывает 13-секундную секвенцию и скачивает результат
@@ -158,7 +178,7 @@ export default function App() {
       try {
         await ffmpeg.exec(["-v", "verbose", "-y", "-i", "frame_%04d.png", "dummy.webm"]);
       } catch {
-        // Игнорируем ошибки
+        // Игнорируем
       }
 
       // Записываем все кадры во внутреннюю ФС FFmpeg
@@ -230,30 +250,28 @@ export default function App() {
         ))}
       </div>
 
-      {/* Одна-единственная кнопка: «Записать и скачать» */}
       <div style={{ marginTop: "20px" }}>
         <button
           onClick={handleRecordAndDownloadClick}
           disabled={isProcessing || !isFFmpegReady}
           style={{ fontSize: "16px", padding: "10px" }}
         >
-          {isProcessing ? "Идёт запись и конвертация..." : "Записать и скачать (13 секунд)"}
+          {isProcessing ? "Идёт запись и конвертация..." : "Скачать видео"}
         </button>
       </div>
 
-      {/* Блок лога */}
       <div style={{ marginTop: "20px" }}>
-        <h3>Логи</h3>
         <div
           style={{
             maxHeight: "200px",
             overflowY: "auto",
             border: "1px solid #ccc",
-            padding: "0.5rem"
+            padding: "0.5rem",
+            backgroundColor: "#000"
           }}
         >
           {logs.map((log, i) => (
-            <div key={i} style={{ marginBottom: "0.2rem" }}>
+            <div key={i} style={{ marginBottom: "0.2rem", color: "#00FF00", fontSize: "10px" }}>
               {log}
             </div>
           ))}
