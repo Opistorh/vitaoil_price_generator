@@ -4,6 +4,7 @@ import { useRive, Layout, Fit, Alignment } from "@rive-app/react-canvas";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { fetchFile } from "@ffmpeg/util";
 
+// Преобразуем dataURL в Blob
 function dataURLtoBlob(dataURL) {
   const arr = dataURL.split(",");
   const mime = arr[0].match(/:(.*?);/)[1];
@@ -17,7 +18,6 @@ function dataURLtoBlob(dataURL) {
 }
 
 // Генерация прогресс-бара в стиле npm
-// percent: число от 0 до 100
 function getProgressBar(percent, barLength = 20) {
   const filledLength = Math.round((percent / 100) * barLength);
   const bar = "#".repeat(filledLength) + "-".repeat(barLength - filledLength);
@@ -27,15 +27,36 @@ function getProgressBar(percent, barLength = 20) {
 export default function App() {
   const stateMachineName = "State Machine 1";
 
+  // Логи и функция для добавления лог-сообщений
   const [logs, setLogs] = useState([]);
 
-  // Выводим в консоль + запоминаем в состоянии
+  // Эта функция добавляет новую строку лога (как у вас было)
   function addLog(message) {
     setLogs((prevLogs) => [message, ...prevLogs].slice(0, 200));
     console.log(message);
   }
 
-  // Инициализируем Rive
+  // А эта обновляет последнюю добавленную строку,
+  // чтобы она не плодила новые записи, а «заменяла» предыдущую
+  function updateLastLog(newMessage) {
+    setLogs((prevLogs) => {
+      if (prevLogs.length === 0) {
+        // Если вдруг лога ещё нет, просто добавим новую строку
+        return [newMessage];
+      }
+      // Клонируем
+      const newLogs = [...prevLogs];
+      // Поскольку "новая" запись у нас в начале массива (индекс 0),
+      // заменяем именно её.
+      newLogs[0] = newMessage;
+      return newLogs;
+    });
+    // Для консоли — покажем в одной строке, если поддерживается \r,
+    // но часто браузер всё равно сделает перенос. Ничего страшного.
+    console.log("\r" + newMessage);
+  }
+
+  // Инициализация Rive
   const { rive, RiveComponent } = useRive({
     src: "vitaoil.riv",
     stateMachines: stateMachineName,
@@ -46,7 +67,7 @@ export default function App() {
     })
   });
 
-  // Текстовые значения
+  // Текстовые значения (из текст-ранов в Rive)
   const [textValues, setTextValues] = useState({
     "95 PREM": "",
     "92 ECO": "",
@@ -56,16 +77,18 @@ export default function App() {
     "COFFEE": ""
   });
 
-  // FFmpeg
+  // FFmpeg – создаём только один раз
   const ffmpegRef = useRef(null);
   const [isFFmpegReady, setIsFFmpegReady] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Инициализация FFmpeg
+  // Загружаем FFmpeg (с логами)
   useEffect(() => {
     (async () => {
-      const ffmpeg = new FFmpeg({ log: false });
-      // Убираем подробные логи ffmpeg.on("log"...), чтобы не засорять вывод
+      const ffmpeg = new FFmpeg({ log: true });
+      ffmpeg.on("log", ({ message }) => {
+        addLog(`[ffmpeg] ${message}`);
+      });
 
       await ffmpeg.load();
       ffmpegRef.current = ffmpeg;
@@ -74,7 +97,7 @@ export default function App() {
     })();
   }, []);
 
-  // После инициализации Rive, считываем текущие значения текстовых полей
+  // После инициализации Rive — читаем текущие значения текст-ранов
   useEffect(() => {
     if (rive) {
       setTextValues({
@@ -89,7 +112,7 @@ export default function App() {
     }
   }, [rive]);
 
-  // Валидация
+  // Обработчик ввода
   const handleInputChange = (e, variableName) => {
     const { value } = e.target;
     let pattern;
@@ -109,7 +132,7 @@ export default function App() {
     }
   };
 
-  // Запись + скачивание
+  // Непосредственно запись, сборка и скачивание
   const handleRecordAndDownloadClick = async () => {
     if (!rive) {
       alert("Rive не инициализирован!");
@@ -125,15 +148,15 @@ export default function App() {
     }
 
     setIsProcessing(true);
-    setLogs([]); // Очистим логи для нового «прогонa» (по желанию)
+    setLogs([]); // очистим логи для нового прогона
 
     try {
-      // Шаг 1: Сброс/запуск анимации
+      // Шаг 1: Запуск/сброс анимации
       addLog("Шаг 1/5: Запуск анимации...");
       rive.stop(stateMachineName);
       rive.play(stateMachineName);
 
-      // Шаг 2: Запись кадров (примерно 13 сек)
+      // Шаг 2: Запись ~13 секунд
       addLog("Шаг 2/5: Запись кадров...");
       const canvas = document.querySelector("canvas");
       if (!canvas) {
@@ -153,14 +176,15 @@ export default function App() {
           const dataURL = canvas.toDataURL("image/png");
           frames.push(dataURL);
 
-          // Обновим прогресс
+          // Прогресс записи
           const currentFrame = frames.length;
           const newPercent = Math.floor((currentFrame / totalFrames) * 100);
-          // Чтобы не спамить каждую миллисекунду, обновим лог, если процент растёт
           if (newPercent !== progressPercent) {
             progressPercent = newPercent;
-            // Рисуем прогресс-бар
-            addLog(`   Запись кадров: ${getProgressBar(progressPercent)}`);
+            // Вместо addLog — updateLastLog, чтобы не спамить новыми строками
+            updateLastLog(
+              `Шаг 2/5: Запись кадров: ${getProgressBar(progressPercent)}`
+            );
           }
 
           if (elapsed >= maxDuration) {
@@ -169,28 +193,21 @@ export default function App() {
           }
         }, interval);
       });
-      addLog(`   Завершена запись ~${frames.length} кадров.`);
+      // Допишем финальный итог
+      updateLastLog(`Шаг 2/5: Запись кадров завершена, всего ${frames.length} кадров.`);
 
-      // Шаг 3: Подготовка FFmpeg
+      // Шаг 3: Подготовка кадров для FFmpeg
       addLog("Шаг 3/5: Подготовка кадров...");
       const ffmpeg = ffmpegRef.current;
 
-      // На всякий случай чистим старые
+      // Очищаем старые файлы (если были)
       try {
-        await ffmpeg.exec([
-          "-v",
-          "error",
-          "-y",
-          "-i",
-          "frame_%04d.png",
-          "dummy.webm"
-        ]);
+        await ffmpeg.exec(["-v", "error", "-y", "-i", "frame_%04d.png", "dummy.webm"]);
       } catch {
         // игнорируем
       }
 
-      // Запишем кадры во внутреннюю FS FFmpeg
-      // Обновим прогресс похожим образом
+      // Загружаем кадры во внутреннюю ФС...
       addLog("   Загружаем кадры во внутреннюю ФС...");
       for (let i = 0; i < frames.length; i++) {
         const indexStr = String(i + 1).padStart(4, "0");
@@ -198,15 +215,25 @@ export default function App() {
         const blob = dataURLtoBlob(frames[i]);
         await ffmpeg.writeFile(filename, await fetchFile(blob));
 
-        // Прогресс
+        // Прогресс подготовки
         const percent = Math.floor(((i + 1) / frames.length) * 100);
-        if (i % 10 === 0 || i === frames.length - 1) {
-          addLog(`   Подготовка кадров: ${getProgressBar(percent)}`);
-        }
+        updateLastLog(`Шаг 3/5: Подготовка кадров: ${getProgressBar(percent)}`);
       }
+      updateLastLog("Шаг 3/5: Подготовка кадров — завершена.");
 
-      // Шаг 4: Сборка MP4
+      // Шаг 4: Сборка видео (прогресс из пакетов)
       addLog("Шаг 4/5: Сборка видео (MP4, libx264)...");
+      let buildCount = 0;
+      const TOTAL_PACKETS = 80; // Условно знаем, что ffmpeg даёт ~80 событий
+      ffmpeg.on("progress", () => {
+        buildCount++;
+        const percent = Math.min(
+          100,
+          Math.round((buildCount / TOTAL_PACKETS) * 100)
+        );
+        updateLastLog(`Шаг 4/5: Сборка видео: ${getProgressBar(percent)}`);
+      });
+
       await ffmpeg.exec([
         "-framerate",
         "60",
@@ -221,18 +248,18 @@ export default function App() {
         "output.mp4"
       ]);
 
-      // Считываем готовый файл
+      updateLastLog("Шаг 4/5: Сборка видео — завершена.");
+
+      // Шаг 5: Скачивание
+      addLog("Шаг 5/5: Скачивание результата...");
       const outputData = await ffmpeg.readFile("output.mp4");
       if (!outputData || outputData.length === 0) {
         throw new Error("Файл output.mp4 пуст или не прочитан!");
       }
       addLog("   Видео собрано в память.");
 
-      // Шаг 5: Скачивание
-      addLog("Шаг 5/5: Скачивание результата...");
       const videoBlob = new Blob([outputData.buffer], { type: "video/mp4" });
       const videoUrl = URL.createObjectURL(videoBlob);
-
       const a = document.createElement("a");
       a.href = videoUrl;
       a.download = "animation.mp4";
@@ -250,17 +277,15 @@ export default function App() {
     }
   };
 
-  // Стили
+  // Простые стили
   const containerStyle = {
     maxWidth: "320px",
     margin: "0 auto",
     marginBottom: "32px"
   };
-
   const fullWidthStyle = {
     width: "100%"
   };
-
   const riveStyle = {
     height: "374px",
     width: "100%"
@@ -311,7 +336,7 @@ export default function App() {
               ))}
             </div>
 
-            {/* Кнопка "Скачать видео" */}
+            {/* Кнопка */}
             <div style={{ marginTop: "20px", ...fullWidthStyle }}>
               <button
                 onClick={handleRecordAndDownloadClick}
