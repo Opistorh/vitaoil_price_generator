@@ -100,7 +100,7 @@ export default function App() {
   };
 
   // --------------------------------
-  // 1) Записать PNG-секвенцию (8 сек)
+  // 1) Записать PNG-секвенцию (13 сек)
   // --------------------------------
   const handleRecordPngClick = () => {
     if (!rive) {
@@ -136,10 +136,10 @@ export default function App() {
     setIsRecording(true);
 
     const newFrames = [];
-    const fps = 30;
+    const fps = 60;
     const interval = 1000 / fps; 
     let elapsed = 0;
-    const maxDuration = 8000; // 8 секунд
+    const maxDuration = 13000; // 13 секунд
 
     const timerId = setInterval(() => {
       elapsed += interval;
@@ -235,7 +235,7 @@ export default function App() {
       console.log("Запуск FFmpeg (exec)...");
       // Собираем в output.webm (VP9):
       await ffmpeg.exec([
-  "-framerate", "30",            // или 30, как вам нужно
+  "-framerate", "60",            // или 30, как вам нужно
   "-start_number", "1",         // явно говорим, что первый кадр — frame_0001.png
   "-i", "frame_%04d.png",       // шаблон
   //"-frames:v", "64",             // ровно 8 кадров
@@ -310,7 +310,7 @@ export default function App() {
         onClick={handleRecordPngClick} 
         disabled={isRecording} 
         style={{ fontSize: "16px", padding: "10px" }}>
-          {isRecording ? "Идёт запись..." : "Записать PNG-секвенцию (8 секунд)"}
+          {isRecording ? "Идёт запись..." : "Записать PNG-секвенцию (13 секунд)"}
         </button>
       </div>
   
