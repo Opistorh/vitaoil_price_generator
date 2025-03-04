@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./styles.css";
 import { useRive, Layout, Fit, Alignment } from "@rive-app/react-canvas";
-import JSZip from "jszip"; 
+//import JSZip from "jszip"; 
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { fetchFile } from "@ffmpeg/util";
 
@@ -86,16 +86,12 @@ export default function App() {
     }
   }, [rive]);
 
-  // Обновление input
+  // Автообновление в Rive при изменении input
   const handleInputChange = (e, variableName) => {
     const { value } = e.target;
     setTextValues(prev => ({ ...prev, [variableName]: value }));
-  };
-
-  // Применяем изменение в Rive
-  const handleApplyClick = (variableName) => {
     if (rive) {
-      rive.setTextRunValue(variableName, textValues[variableName]);
+      rive.setTextRunValue(variableName, value);
     }
   };
 
@@ -290,16 +286,13 @@ export default function App() {
         {Object.keys(textValues).map(variableName => (
           <div className="text-run-control" key={variableName}>
             <label>
-              {variableName}:{" "}
+              {variableName}: {" "}
               <input
                 type="text"
                 value={textValues[variableName]}
                 onChange={e => handleInputChange(e, variableName)}
               />
             </label>
-            <button onClick={() => handleApplyClick(variableName)}>
-              Применить
-            </button>
           </div>
         ))}
       </div>
