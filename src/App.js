@@ -4,7 +4,6 @@ import { useRive, Layout, Fit, Alignment } from "@rive-app/react-canvas";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { fetchFile } from "@ffmpeg/util";
 
-// Утилита: конвертация dataURL -> Blob
 function dataURLtoBlob(dataURL) {
   const arr = dataURL.split(",");
   const mime = arr[0].match(/:(.*?);/)[1];
@@ -17,12 +16,20 @@ function dataURLtoBlob(dataURL) {
   return new Blob([u8arr], { type: mime });
 }
 
+// Генерация прогресс-бара в стиле npm
+// percent: число от 0 до 100
+function getProgressBar(percent, barLength = 20) {
+  const filledLength = Math.round((percent / 100) * barLength);
+  const bar = "#".repeat(filledLength) + "-".repeat(barLength - filledLength);
+  return `[${bar}] ${percent.toFixed(0)}%`;
+}
+
 export default function App() {
   const stateMachineName = "State Machine 1";
 
-  // Логи
   const [logs, setLogs] = useState([]);
 
+  // Выводим в консоль + запоминаем в состоянии
   function addLog(message) {
     setLogs((prevLogs) => [message, ...prevLogs].slice(0, 200));
     console.log(message);
@@ -57,15 +64,13 @@ export default function App() {
   // Инициализация FFmpeg
   useEffect(() => {
     (async () => {
-      const ffmpeg = new FFmpeg({ log: true });
-      ffmpeg.on("log", ({ type, message }) => {
-        addLog(`[FFmpeg ${type}]: ${message}`);
-      });
+      const ffmpeg = new FFmpeg({ log: false });
+      // Убираем подробные логи ffmpeg.on("log"...), чтобы не засорять вывод
 
       await ffmpeg.load();
       ffmpegRef.current = ffmpeg;
       setIsFFmpegReady(true);
-      addLog("FFmpeg загружен (новый API).");
+      addLog("FFmpeg готов к работе.");
     })();
   }, []);
 
@@ -80,14 +85,13 @@ export default function App() {
         "GAS": rive.getTextRunValue("GAS") || "",
         "COFFEE": rive.getTextRunValue("COFFEE") || ""
       });
-      addLog("Начальное чтение значений текстовых полей из Rive завершено.");
+      addLog("Чтение начальных значений текстовых полей завершено.");
     }
   }, [rive]);
 
-  // ВАЛИДАЦИЯ
+  // Валидация
   const handleInputChange = (e, variableName) => {
     const { value } = e.target;
-
     let pattern;
     if (variableName === "COFFEE") {
       // До 4 цифр
@@ -101,12 +105,11 @@ export default function App() {
       setTextValues((prev) => ({ ...prev, [variableName]: value }));
       if (rive) {
         rive.setTextRunValue(variableName, value);
-        // addLog(`Поле "${variableName}" изменено на "${value}"`);
       }
     }
   };
 
-  // Функция записи и скачивания
+  // Запись + скачивание
   const handleRecordAndDownloadClick = async () => {
     if (!rive) {
       alert("Rive не инициализирован!");
@@ -117,82 +120,116 @@ export default function App() {
       return;
     }
     if (isProcessing) {
-      alert("Уже идёт запись и конвертация!");
+      alert("Уже идёт запись/конвертация!");
       return;
     }
 
     setIsProcessing(true);
+    setLogs([]); // Очистим логи для нового «прогонa» (по желанию)
 
     try {
-      // 1) Сбросить и запустить анимацию
+      // Шаг 1: Сброс/запуск анимации
+      addLog("Шаг 1/5: Запуск анимации...");
       rive.stop(stateMachineName);
       rive.play(stateMachineName);
-      addLog("Анимация сброшена и запущена с нуля.");
 
-      // 2) Запись кадров (13 сек)
+      // Шаг 2: Запись кадров (примерно 13 сек)
+      addLog("Шаг 2/5: Запись кадров...");
       const canvas = document.querySelector("canvas");
       if (!canvas) {
         throw new Error("Canvas с Rive не найден!");
       }
-
       const frames = [];
       const fps = 60;
       const interval = 1000 / fps;
       let elapsed = 0;
       const maxDuration = 13000; // 13 секунд
+      const totalFrames = Math.floor((maxDuration / 1000) * fps);
 
-      addLog("Начинаем запись кадров...");
+      let progressPercent = 0;
       await new Promise((resolve) => {
         const timerId = setInterval(() => {
           elapsed += interval;
           const dataURL = canvas.toDataURL("image/png");
           frames.push(dataURL);
-          addLog(`Кадр #${frames.length} снят.`);
+
+          // Обновим прогресс
+          const currentFrame = frames.length;
+          const newPercent = Math.floor((currentFrame / totalFrames) * 100);
+          // Чтобы не спамить каждую миллисекунду, обновим лог, если процент растёт
+          if (newPercent !== progressPercent) {
+            progressPercent = newPercent;
+            // Рисуем прогресс-бар
+            addLog(`   Запись кадров: ${getProgressBar(progressPercent)}`);
+          }
+
           if (elapsed >= maxDuration) {
             clearInterval(timerId);
             resolve();
           }
         }, interval);
       });
-      addLog(`Запись завершена, всего кадров: ${frames.length}`);
+      addLog(`   Завершена запись ~${frames.length} кадров.`);
 
-      // 3) Используем FFmpeg для сборки видео
-      addLog("Начинаем сборку видео из кадров...");
+      // Шаг 3: Подготовка FFmpeg
+      addLog("Шаг 3/5: Подготовка кадров...");
       const ffmpeg = ffmpegRef.current;
 
-      // Для подстраховки удаляем мусор (если вдруг есть)
+      // На всякий случай чистим старые
       try {
-        await ffmpeg.exec(["-v", "verbose", "-y", "-i", "frame_%04d.png", "dummy.webm"]);
+        await ffmpeg.exec([
+          "-v",
+          "error",
+          "-y",
+          "-i",
+          "frame_%04d.png",
+          "dummy.webm"
+        ]);
       } catch {
-        // Игнорируем
+        // игнорируем
       }
 
-      // Записываем все кадры во внутреннюю ФС FFmpeg
+      // Запишем кадры во внутреннюю FS FFmpeg
+      // Обновим прогресс похожим образом
+      addLog("   Загружаем кадры во внутреннюю ФС...");
       for (let i = 0; i < frames.length; i++) {
         const indexStr = String(i + 1).padStart(4, "0");
         const filename = `frame_${indexStr}.png`;
         const blob = dataURLtoBlob(frames[i]);
-        addLog(`Пишем ${filename}, размер blob = ${blob.size} байт...`);
         await ffmpeg.writeFile(filename, await fetchFile(blob));
+
+        // Прогресс
+        const percent = Math.floor(((i + 1) / frames.length) * 100);
+        if (i % 10 === 0 || i === frames.length - 1) {
+          addLog(`   Подготовка кадров: ${getProgressBar(percent)}`);
+        }
       }
 
-      // Собираем MP4 (H.264, yuv420p)
+      // Шаг 4: Сборка MP4
+      addLog("Шаг 4/5: Сборка видео (MP4, libx264)...");
       await ffmpeg.exec([
-        "-framerate", "60",
-        "-start_number", "1",
-        "-i", "frame_%04d.png",
-        "-c:v", "libx264",
-        "-pix_fmt", "yuv420p",
+        "-framerate",
+        "60",
+        "-start_number",
+        "1",
+        "-i",
+        "frame_%04d.png",
+        "-c:v",
+        "libx264",
+        "-pix_fmt",
+        "yuv420p",
         "output.mp4"
       ]);
 
+      // Считываем готовый файл
       const outputData = await ffmpeg.readFile("output.mp4");
       if (!outputData || outputData.length === 0) {
         throw new Error("Файл output.mp4 пуст или не прочитан!");
       }
+      addLog("   Видео собрано в память.");
 
-      // 4) Скачиваем результат
-      addLog(`Видео собрано. Размер output.mp4: ${outputData.length} байт.`);
+      // Шаг 5: Скачивание
+      addLog("Шаг 5/5: Скачивание результата...");
       const videoBlob = new Blob([outputData.buffer], { type: "video/mp4" });
       const videoUrl = URL.createObjectURL(videoBlob);
 
@@ -204,9 +241,9 @@ export default function App() {
       document.body.removeChild(a);
       URL.revokeObjectURL(videoUrl);
 
-      addLog("Видео успешно скачано (animation.mp4).");
+      addLog("Готово! Файл animation.mp4 скачан.");
     } catch (err) {
-      addLog("Ошибка в процессе записи или конвертации: " + err);
+      addLog("Ошибка: " + err);
       alert("Произошла ошибка:\n" + err.message);
     } finally {
       setIsProcessing(false);
@@ -217,33 +254,29 @@ export default function App() {
   const containerStyle = {
     maxWidth: "320px",
     margin: "0 auto",
-    marginBottom: "32px",
+    marginBottom: "32px"
   };
 
   const fullWidthStyle = {
-    width: "100%",
+    width: "100%"
   };
 
   const riveStyle = {
     height: "374px",
-    width: "100%",
+    width: "100%"
   };
 
   return (
     <div className="App" style={{ fontFamily: "sans-serif", padding: "1rem" }}>
       <div style={containerStyle}>
-        {/* Rive-анимация на всю ширину */}
+        {/* Rive-анимация */}
         <div style={riveStyle}>
           <RiveComponent />
         </div>
 
-        {/* 
-          Показываем блоки ввода и кнопку,
-          только если процесс рендеринга/конвертации НЕ идёт 
-        */}
         {!isProcessing && (
           <>
-            {/* Блок с текстовыми полями */}
+            {/* Инпуты */}
             <div
               className="controls"
               style={{
@@ -291,15 +324,14 @@ export default function App() {
           </>
         )}
 
-        {/* Консоль логов */}
+        {/* Логи */}
         <div style={{ marginTop: "20px", ...fullWidthStyle }}>
           <div
             style={{
               maxHeight: "200px",
               overflowY: "auto",
-              //border: "1px solid #ccc",
-              padding: "0.5rem",
-              backgroundColor: "#000"
+              backgroundColor: "#000",
+              padding: "0.5rem"
             }}
           >
             {logs.map((log, i) => (
