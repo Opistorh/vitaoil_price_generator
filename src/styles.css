@@ -4,22 +4,10 @@ body {
 
 .App {
   font-family: sans-serif;
-  /*text-align: center;*/
   font-size: 16px;
   color: #efcb7d;
 }
 
-.container {
-  height: 374px;
-  width: 320px;
-  margin-bottom: 32px;
-  /*position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  margin: auto auto;*/
-}
 
 .text-run-control {
   margin-top: 8px;

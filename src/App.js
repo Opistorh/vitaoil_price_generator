@@ -4,7 +4,7 @@ import { useRive, Layout, Fit, Alignment } from "@rive-app/react-canvas";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { fetchFile } from "@ffmpeg/util";
 
-// Утилита: конвертация dataURL -> Blob (нужно для ffmpeg)
+// Утилита: конвертация dataURL -> Blob
 function dataURLtoBlob(dataURL) {
   const arr = dataURL.split(",");
   const mime = arr[0].match(/:(.*?);/)[1];
@@ -23,7 +23,6 @@ export default function App() {
   // Логи
   const [logs, setLogs] = useState([]);
 
-  // Хелпер для записи лога на экран + в консоль
   function addLog(message) {
     setLogs((prevLogs) => [message, ...prevLogs].slice(0, 200));
     console.log(message);
@@ -53,8 +52,6 @@ export default function App() {
   // FFmpeg
   const ffmpegRef = useRef(null);
   const [isFFmpegReady, setIsFFmpegReady] = useState(false);
-
-  // Признак занятости (запись+конвертация)
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Инициализация FFmpeg
@@ -87,49 +84,38 @@ export default function App() {
     }
   }, [rive]);
 
-  // ВАЛИДАЦИЯ: цены на топливо (до трёх цифр, потом точка, потом до двух цифр) или пусто.
-  // COFFEE: только целое число или пусто.
+  // ВАЛИДАЦИЯ
   const handleInputChange = (e, variableName) => {
     const { value } = e.target;
 
     let pattern;
     if (variableName === "COFFEE") {
-      // Разрешаем ввод только целых чисел (при желании — ограничьте количество цифр)
-      pattern = /^\d{0,4}$/; 
-      // Напр.: до 4 цифр в числе, чтобы user мог ввести 9999. Можно менять по необходимости.
+      // До 4 цифр
+      pattern = /^\d{0,4}$/;
     } else {
-      // Разрешаем ввод вида:
-      //  — вообще пусто
-      //  — 1-3 цифры (без точки)
-      //  — 1-3 цифры + точка + 0-2 цифры (но без лишних символов)
+      // До 3 целых и 2 знака после запятой
       pattern = /^\d{0,3}(\.\d{0,2})?$/;
     }
 
-    // Если новое значение либо пустое, либо подходит под шаблон — обновляем state и Rive
     if (value === "" || pattern.test(value)) {
       setTextValues((prev) => ({ ...prev, [variableName]: value }));
       if (rive) {
         rive.setTextRunValue(variableName, value);
-        addLog(`Поле "${variableName}" изменено на "${value}"`);
+        // addLog(`Поле "${variableName}" изменено на "${value}"`);
       }
     }
-    // Иначе просто игнорируем (не обновляем state),
-    // что не даёт пользователю вводить запрещённые символы.
   };
 
-  // Единая функция: записывает 13-секундную секвенцию и скачивает результат
+  // Функция записи и скачивания
   const handleRecordAndDownloadClick = async () => {
-    // Проверяем готовность Rive
     if (!rive) {
       alert("Rive не инициализирован!");
       return;
     }
-    // Проверяем готовность FFmpeg
     if (!isFFmpegReady) {
       alert("FFmpeg ещё не готов!");
       return;
     }
-    // Если уже идёт процесс — не даём нажать второй раз
     if (isProcessing) {
       alert("Уже идёт запись и конвертация!");
       return;
@@ -174,7 +160,7 @@ export default function App() {
       addLog("Начинаем сборку видео из кадров...");
       const ffmpeg = ffmpegRef.current;
 
-      // Для подстраховки убираем мусор (если вдруг есть)
+      // Для подстраховки удаляем мусор (если вдруг есть)
       try {
         await ffmpeg.exec(["-v", "verbose", "-y", "-i", "frame_%04d.png", "dummy.webm"]);
       } catch {
@@ -200,7 +186,6 @@ export default function App() {
         "output.mp4"
       ]);
 
-      // Пробуем прочитать готовый файл
       const outputData = await ffmpeg.readFile("output.mp4");
       if (!outputData || outputData.length === 0) {
         throw new Error("Файл output.mp4 пуст или не прочитан!");
@@ -228,53 +213,108 @@ export default function App() {
     }
   };
 
+  // Стили
+  const containerStyle = {
+    maxWidth: "320px",
+    margin: "0 auto",
+    marginBottom: "32px",
+  };
+
+  const fullWidthStyle = {
+    width: "100%",
+  };
+
+  const riveStyle = {
+    height: "374px",
+    width: "100%",
+  };
+
   return (
     <div className="App" style={{ fontFamily: "sans-serif", padding: "1rem" }}>
-      <div className="container">
-        <RiveComponent />
-      </div>
+      <div style={containerStyle}>
+        {/* Rive-анимация на всю ширину */}
+        <div style={riveStyle}>
+          <RiveComponent />
+        </div>
 
-      <div className="controls" style={{ marginTop: "1rem" }}>
-        {Object.keys(textValues).map((variableName) => (
-          <div className="text-run-control" key={variableName} style={{ marginBottom: "0.5rem" }}>
-            <label>
-              {variableName}:
-              <input
-                type="text"
-                value={textValues[variableName]}
-                onChange={(e) => handleInputChange(e, variableName)}
-                style={{ marginLeft: "0.5rem" }}
-              />
-            </label>
-          </div>
-        ))}
-      </div>
-
-      <div style={{ marginTop: "20px" }}>
-        <button
-          onClick={handleRecordAndDownloadClick}
-          disabled={isProcessing || !isFFmpegReady}
-          style={{ fontSize: "16px", padding: "10px" }}
-        >
-          {isProcessing ? "Идёт запись и конвертация..." : "Скачать видео"}
-        </button>
-      </div>
-
-      <div style={{ marginTop: "20px" }}>
-        <div
-          style={{
-            maxHeight: "200px",
-            overflowY: "auto",
-            border: "1px solid #ccc",
-            padding: "0.5rem",
-            backgroundColor: "#000"
-          }}
-        >
-          {logs.map((log, i) => (
-            <div key={i} style={{ marginBottom: "0.2rem", color: "#00FF00", fontSize: "10px" }}>
-              {log}
+        {/* 
+          Показываем блоки ввода и кнопку,
+          только если процесс рендеринга/конвертации НЕ идёт 
+        */}
+        {!isProcessing && (
+          <>
+            {/* Блок с текстовыми полями */}
+            <div
+              className="controls"
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                marginTop: "1rem",
+                ...fullWidthStyle
+              }}
+            >
+              {Object.keys(textValues).map((variableName) => (
+                <div
+                  className="text-run-control"
+                  key={variableName}
+                  style={{ marginBottom: "0.5rem", width: "100%" }}
+                >
+                  <label
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      width: "100%"
+                    }}
+                  >
+                    {variableName}:
+                    <input
+                      type="text"
+                      value={textValues[variableName]}
+                      onChange={(e) => handleInputChange(e, variableName)}
+                      style={{ marginLeft: "0.5rem" }}
+                    />
+                  </label>
+                </div>
+              ))}
             </div>
-          ))}
+
+            {/* Кнопка "Скачать видео" */}
+            <div style={{ marginTop: "20px", ...fullWidthStyle }}>
+              <button
+                onClick={handleRecordAndDownloadClick}
+                disabled={!isFFmpegReady}
+                style={{ fontSize: "16px", padding: "10px", width: "100%" }}
+              >
+                Скачать видео
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* Консоль логов */}
+        <div style={{ marginTop: "20px", ...fullWidthStyle }}>
+          <div
+            style={{
+              maxHeight: "200px",
+              overflowY: "auto",
+              border: "1px solid #ccc",
+              padding: "0.5rem",
+              backgroundColor: "#000"
+            }}
+          >
+            {logs.map((log, i) => (
+              <div
+                key={i}
+                style={{
+                  marginBottom: "0.2rem",
+                  color: "#00FF00",
+                  fontSize: "10px"
+                }}
+              >
+                {log}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
