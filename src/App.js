@@ -50,16 +50,12 @@ export default function App() {
     "COFFEE": ""
   });
 
-  // Храним кадры (base64 PNG)
-  const [frames, setFrames] = useState([]);
-
-  // Флаги
-  const [isRecording, setIsRecording] = useState(false);
-  const [isConverting, setIsConverting] = useState(false);
-
   // FFmpeg
   const ffmpegRef = useRef(null);
   const [isFFmpegReady, setIsFFmpegReady] = useState(false);
+
+  // Признак занятости (запись+конвертация)
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Инициализация FFmpeg (log: true для включения базовых логов)
   useEffect(() => {
@@ -101,148 +97,114 @@ export default function App() {
     }
   };
 
-  // --------------------------------
-  // 1) Записать PNG-секвенцию (13 сек)
-  // --------------------------------
-  const handleRecordPngClick = () => {
+  // Единая функция: записывает 13-секундную секвенцию и скачивает результат
+  const handleRecordAndDownloadClick = async () => {
+    // Проверяем готовность Rive
     if (!rive) {
       alert("Rive не инициализирован!");
       return;
     }
-    if (isRecording) {
-      alert("Сейчас уже идёт запись кадров!");
+    // Проверяем готовность FFmpeg
+    if (!isFFmpegReady) {
+      alert("FFmpeg ещё не готов!");
+      return;
+    }
+    // Если уже идёт процесс — не даём нажать второй раз
+    if (isProcessing) {
+      alert("Уже идёт запись и конвертация!");
       return;
     }
 
-    // Сбрасываем анимацию
+    setIsProcessing(true);
+
     try {
+      // 1) Сбросить и запустить анимацию
       rive.stop(stateMachineName);
       rive.play(stateMachineName);
       addLog("Анимация сброшена и запущена с нуля.");
-    } catch (err) {
-      addLog("Ошибка при сбросе анимации: " + err);
-      return;
-    }
 
-    // Очищаем старые кадры, если есть
-    setFrames([]);
-
-    // Находим canvas
-    const canvas = document.querySelector("canvas");
-    if (!canvas) {
-      addLog("Canvas с Rive не найден!");
-      return;
-    }
-
-    // Начинаем «запись»
-    setIsRecording(true);
-
-    const newFrames = [];
-    const fps = 60;
-    const interval = 1000 / fps;
-    let elapsed = 0;
-    const maxDuration = 13000; // 13 секунд
-
-    const timerId = setInterval(() => {
-      elapsed += interval;
-      const dataURL = canvas.toDataURL("image/png");
-      newFrames.push(dataURL);
-      addLog(`Кадр #${newFrames.length} снят.`);
-      if (elapsed >= maxDuration) {
-        clearInterval(timerId);
-        finishRecording(newFrames);
+      // 2) Запись кадров (13 сек)
+      const canvas = document.querySelector("canvas");
+      if (!canvas) {
+        throw new Error("Canvas с Rive не найден!");
       }
-    }, interval);
 
-    const finishRecording = (collectedFrames) => {
-      setFrames(collectedFrames);
-      setIsRecording(false);
-      addLog(`Запись завершена, всего кадров: ${collectedFrames.length}`);
-    };
-  };
+      const frames = [];
+      const fps = 60;
+      const interval = 1000 / fps;
+      let elapsed = 0;
+      const maxDuration = 13000; // 13 секунд
 
-  // ---------------------------------------------------
-  // 2) Сконвертировать уже снятые PNG в WebM (через ffmpeg)
-  // ---------------------------------------------------
-  const handleConvertToVideoClick = async () => {
-    if (!isFFmpegReady) {
-      alert("FFmpeg ещё не готов...");
-      return;
-    }
-    if (!frames || frames.length === 0) {
-      alert("Нет кадров, сначала запишите PNG.");
-      return;
-    }
-    if (isConverting) {
-      alert("Уже идёт конвертация!");
-      return;
-    }
+      addLog("Начинаем запись кадров...");
+      await new Promise((resolve) => {
+        const timerId = setInterval(() => {
+          elapsed += interval;
+          const dataURL = canvas.toDataURL("image/png");
+          frames.push(dataURL);
+          addLog(`Кадр #${frames.length} снят.`);
+          if (elapsed >= maxDuration) {
+            clearInterval(timerId);
+            resolve();
+          }
+        }, interval);
+      });
+      addLog(`Запись завершена, всего кадров: ${frames.length}`);
 
-    setIsConverting(true);
-
-    try {
+      // 3) Используем FFmpeg для сборки видео
+      addLog("Начинаем сборку видео из кадров...");
       const ffmpeg = ffmpegRef.current;
-      // Почистить виртуальные файлы
+
+      // Для подстраховки убираем мусор (если вдруг есть)
       try {
-        await ffmpeg.exec(["-v", "verbose","-y", "-i", "frame_%04d.png", "dummy.webm"]);
-      } catch (err) {
-        // игнор
+        await ffmpeg.exec(["-v", "verbose", "-y", "-i", "frame_%04d.png", "dummy.webm"]);
+      } catch {
+        // Игнорируем ошибки
       }
 
-      // Записываем кадры
+      // Записываем все кадры во внутреннюю ФС FFmpeg
       for (let i = 0; i < frames.length; i++) {
         const indexStr = String(i + 1).padStart(4, "0");
         const filename = `frame_${indexStr}.png`;
         const blob = dataURLtoBlob(frames[i]);
         addLog(`Пишем ${filename}, размер blob = ${blob.size} байт...`);
         await ffmpeg.writeFile(filename, await fetchFile(blob));
-        try {
-          const test = await ffmpeg.readFile(filename);
-          addLog(`Записалось: ${filename}, размер = ${test.length}`);
-        } catch (err) {
-          addLog(`Не удалось прочитать после записи ${filename}: ${err}`);
-        }
       }
 
-      addLog("Запуск FFmpeg (exec)...");
+      // Собираем MP4 (H.264, yuv420p)
       await ffmpeg.exec([
-        "-framerate", "60",            // или 30
-        "-start_number", "1",         // первый кадр
-        "-i", "frame_%04d.png",       // шаблон
+        "-framerate", "60",
+        "-start_number", "1",
+        "-i", "frame_%04d.png",
         "-c:v", "libx264",
         "-pix_fmt", "yuv420p",
-        "output.mp4",
+        "output.mp4"
       ]);
 
-      let outputData;
-      try {
-        outputData = await ffmpeg.readFile("output.mp4");
-        addLog(`Размер output.mp4: ${outputData.length} байт`);
-      } catch (err) {
-        addLog("Не удалось прочитать output.mp4: " + err);
-        throw err;
+      // Пробуем прочитать готовый файл
+      const outputData = await ffmpeg.readFile("output.mp4");
+      if (!outputData || outputData.length === 0) {
+        throw new Error("Файл output.mp4 пуст или не прочитан!");
       }
 
-      if (outputData.length === 0) {
-        throw new Error("Файл output.mp4 пуст!");
-      }
-
-      const webmBlob = new Blob([outputData.buffer], { type: "video/webm" });
-      const webmUrl = URL.createObjectURL(webmBlob);
+      // 4) Скачиваем результат
+      addLog(`Видео собрано. Размер output.mp4: ${outputData.length} байт.`);
+      const videoBlob = new Blob([outputData.buffer], { type: "video/mp4" });
+      const videoUrl = URL.createObjectURL(videoBlob);
 
       const a = document.createElement("a");
-      a.href = webmUrl;
+      a.href = videoUrl;
       a.download = "animation.mp4";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(webmUrl);
+      URL.revokeObjectURL(videoUrl);
 
-      addLog("Видео готово и скачано (animation.mp4).");
+      addLog("Видео успешно скачано (animation.mp4).");
     } catch (err) {
-      addLog("Ошибка при сборке видео: " + err);
+      addLog("Ошибка в процессе записи или конвертации: " + err);
+      alert("Произошла ошибка:\n" + err.message);
     } finally {
-      setIsConverting(false);
+      setIsProcessing(false);
     }
   };
 
@@ -256,7 +218,7 @@ export default function App() {
         {Object.keys(textValues).map((variableName) => (
           <div className="text-run-control" key={variableName} style={{ marginBottom: "0.5rem" }}>
             <label>
-              {variableName}: {" "}
+              {variableName}:
               <input
                 type="text"
                 value={textValues[variableName]}
@@ -268,23 +230,14 @@ export default function App() {
         ))}
       </div>
 
-      <div style={{ marginTop: "20px"}}>
-        <button 
-          onClick={handleRecordPngClick} 
-          disabled={isRecording} 
-          style={{ fontSize: "16px", padding: "10px" }}
-        >
-          {isRecording ? "Идёт запись..." : "Записать PNG-секвенцию (13 секунд)"}
-        </button>
-      </div>
-
+      {/* Одна-единственная кнопка: «Записать и скачать» */}
       <div style={{ marginTop: "20px" }}>
         <button
-          onClick={handleConvertToVideoClick}
-          disabled={isConverting || frames.length === 0}
+          onClick={handleRecordAndDownloadClick}
+          disabled={isProcessing || !isFFmpegReady}
           style={{ fontSize: "16px", padding: "10px" }}
         >
-          {isConverting ? "Конвертация..." : "Сконвертировать в WebM"}
+          {isProcessing ? "Идёт запись и конвертация..." : "Записать и скачать (13 секунд)"}
         </button>
       </div>
 
@@ -296,7 +249,7 @@ export default function App() {
             maxHeight: "200px",
             overflowY: "auto",
             border: "1px solid #ccc",
-            padding: "0.5rem",
+            padding: "0.5rem"
           }}
         >
           {logs.map((log, i) => (
