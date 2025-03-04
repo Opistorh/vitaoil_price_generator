@@ -297,7 +297,7 @@ export default function App() {
             style={{
               maxHeight: "200px",
               overflowY: "auto",
-              border: "1px solid #ccc",
+              //border: "1px solid #ccc",
               padding: "0.5rem",
               backgroundColor: "#000"
             }}
