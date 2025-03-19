@@ -30,12 +30,10 @@ function parseLog(log) {
   const progressBarRegex = /\[[#-]+\]\s?\d+%/;
   const match = log.match(progressBarRegex);
 
-  // Если прогресс-бара в строке нет, выводим целиком белым
   if (!match) {
-    return log;
+    return log; // Если прогресс-бара нет, выводим строку целиком
   }
 
-  // Иначе "рвём" строку, а нужный кусок красим в зелёный
   const index = match.index;
   const progressPart = match[0];
   const before = log.slice(0, index);
@@ -93,11 +91,22 @@ export default function App() {
     "GAS": "",
     "COFFEE": "",
     "95 PREM DISCOUNT": "",
-    "92 EURO DISCOUNT": "",
     "92 ECO DISCOUNT": "",
+    "92 EURO DISCOUNT": "",
     "DIESEL DISCOUNT": "",
     "GAS DISCOUNT": ""
   });
+
+  // Массивы для упрощённой группировки полей
+  const leftFields = ["95 PREM", "92 ECO", "92 EURO", "DIESEL", "GAS"];
+  const rightFields = [
+    "95 PREM DISCOUNT",
+    "92 ECO DISCOUNT",
+    "92 EURO DISCOUNT",
+    "DIESEL DISCOUNT",
+    "GAS DISCOUNT"
+  ];
+  const coffeeField = "COFFEE"; // отдельная строка
 
   // FFmpeg – создаём только один раз
   const ffmpegRef = useRef(null);
@@ -131,8 +140,8 @@ export default function App() {
         "GAS": rive.getTextRunValue("GAS") || "",
         "COFFEE": rive.getTextRunValue("COFFEE") || "",
         "95 PREM DISCOUNT": rive.getTextRunValue("95 PREM DISCOUNT") || "",
-        "92 EURO DISCOUNT": rive.getTextRunValue("92 EURO DISCOUNT") || "",
         "92 ECO DISCOUNT": rive.getTextRunValue("92 ECO DISCOUNT") || "",
+        "92 EURO DISCOUNT": rive.getTextRunValue("92 EURO DISCOUNT") || "",
         "DIESEL DISCOUNT": rive.getTextRunValue("DIESEL DISCOUNT") || "",
         "GAS DISCOUNT": rive.getTextRunValue("GAS DISCOUNT") || ""
       }));
@@ -143,14 +152,12 @@ export default function App() {
   // Обработчик ввода
   const handleInputChange = (e, variableName) => {
     const { value } = e.target;
-
     let pattern;
-    if (variableName === "COFFEE") {
-      // До 4 цифр
+    if (variableName === coffeeField) {
+      // До 4 цифр для COFFEE
       pattern = /^\d{0,4}$/;
     } else {
-      // По умолчанию: до 3 целых и 2 знака после запятой
-      // (или пустая строка)
+      // До 3 целых и 2 знака после запятой
       pattern = /^\d{0,3}(\.\d{0,2})?$/;
     }
 
@@ -196,7 +203,7 @@ export default function App() {
       const fps = 60;
       const interval = 1000 / fps;
       let elapsed = 0;
-      const maxDuration = 14000; // 13-14 секунд
+      const maxDuration = 14000; // 13–14 секунд
       const totalFrames = Math.floor((maxDuration / 1000) * fps);
 
       let progressPercent = 0;
@@ -253,7 +260,7 @@ export default function App() {
       // Шаг 4: Сборка
       addLog("Шаг 4/5: Сборка видео (MP4, libx264)...");
       let buildCount = 0;
-      const TOTAL_PACKETS = 80; // Условная оценка
+      const TOTAL_PACKETS = 80; // Примерная оценка
       ffmpeg.on("progress", () => {
         buildCount++;
         const percent = Math.min(
@@ -306,10 +313,12 @@ export default function App() {
     }
   };
 
+  // Стили
   const containerStyle = {
     maxWidth: "320px",
     margin: "0 auto",
-    marginBottom: "32px"
+    marginBottom: "32px",
+    color: "#fff"
   };
   const fullWidthStyle = {
     width: "100%"
@@ -317,6 +326,29 @@ export default function App() {
   const riveStyle = {
     height: "374px",
     width: "100%"
+  };
+  const twoColumnsWrapper = {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: "16px",
+    marginTop: "1rem"
+  };
+  const columnStyle = {
+    flex: "1"
+  };
+  // Обёртка для «лейбл + инпут» (вертикальное расположение)
+  const fieldWrapperStyle = {
+    display: "flex",
+    flexDirection: "column",
+    marginBottom: "1rem"
+  };
+  const labelStyle = {
+    marginBottom: "0.3rem",
+    fontWeight: "bold"
+  };
+  const inputStyle = {
+    width: "100px",
+    padding: "4px"
   };
 
   return (
@@ -328,45 +360,63 @@ export default function App() {
 
         {!isProcessing && (
           <>
-            <div
-              className="controls"
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                marginTop: "1rem",
-                ...fullWidthStyle
-              }}
-            >
-              {Object.keys(textValues).map((variableName) => (
-                <div
-                  className="text-run-control"
-                  key={variableName}
-                  style={{ marginBottom: "0.5rem", width: "100%" }}
-                >
-                  <label
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      width: "100%"
-                    }}
-                  >
-                    {variableName}:
+            {/* Блок с двумя колонками */}
+            <div style={twoColumnsWrapper}>
+              {/* Левая колонка (обычные цены) */}
+              <div style={columnStyle}>
+                {leftFields.map((field) => (
+                  <div key={field} style={fieldWrapperStyle}>
+                    <div style={labelStyle}>{field}</div>
                     <input
                       type="text"
-                      value={textValues[variableName]}
-                      onChange={(e) => handleInputChange(e, variableName)}
-                      style={{ marginLeft: "0.5rem" }}
+                      value={textValues[field]}
+                      onChange={(e) => handleInputChange(e, field)}
+                      style={inputStyle}
                     />
-                  </label>
-                </div>
-              ))}
+                  </div>
+                ))}
+              </div>
+
+              {/* Правая колонка (цены со скидкой) */}
+              <div style={columnStyle}>
+                {rightFields.map((field) => (
+                  <div key={field} style={fieldWrapperStyle}>
+                    <div style={labelStyle}>Со скидкой</div>
+                    <input
+                      type="text"
+                      value={textValues[field]}
+                      onChange={(e) => handleInputChange(e, field)}
+                      style={inputStyle}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
 
+            {/* Отдельная строка для COFFEE на всю ширину */}
+            <div style={{ marginTop: "1rem" }}>
+              <div style={fieldWrapperStyle}>
+                <div style={labelStyle}>{coffeeField}:</div>
+                <input
+                  type="text"
+                  value={textValues[coffeeField]}
+                  onChange={(e) => handleInputChange(e, coffeeField)}
+                  style={inputStyle}
+                />
+              </div>
+            </div>
+
+            {/* Кнопка "Скачать видео" */}
             <div style={{ marginTop: "20px", ...fullWidthStyle }}>
               <button
                 onClick={handleRecordAndDownloadClick}
                 disabled={!isFFmpegReady}
-                style={{ fontSize: "16px", padding: "10px", width: "100%" }}
+                style={{
+                  fontSize: "16px",
+                  padding: "10px",
+                  width: "100%",
+                  cursor: isFFmpegReady ? "pointer" : "default"
+                }}
               >
                 Скачать видео
               </button>
