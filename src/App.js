@@ -75,7 +75,7 @@ export default function App() {
 
   // Инициализация Rive
   const { rive, RiveComponent } = useRive({
-    src: "vitaoil.riv",
+    src: "vitaoil_discount.riv",
     stateMachines: stateMachineName,
     autoplay: true,
     layout: new Layout({
@@ -183,7 +183,7 @@ export default function App() {
       const fps = 60;
       const interval = 1000 / fps;
       let elapsed = 0;
-      const maxDuration = 13000; // 13 секунд
+      const maxDuration = 14000; // 13 секунд
       const totalFrames = Math.floor((maxDuration / 1000) * fps);
 
       let progressPercent = 0;
