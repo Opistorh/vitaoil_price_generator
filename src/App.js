@@ -91,7 +91,12 @@ export default function App() {
     "92 EURO": "",
     "DIESEL": "",
     "GAS": "",
-    "COFFEE": ""
+    "COFFEE": "",
+    "95 PREM DISCOUNT": "",
+    "92 EURO DISCOUNT": "",
+    "92 ECO DISCOUNT": "",
+    "DIESEL DISCOUNT": "",
+    "GAS DISCOUNT": ""
   });
 
   // FFmpeg – создаём только один раз
@@ -117,14 +122,20 @@ export default function App() {
   // После инициализации Rive — читаем текущие значения текст-ранов
   useEffect(() => {
     if (rive) {
-      setTextValues({
+      setTextValues((prev) => ({
+        ...prev,
         "95 PREM": rive.getTextRunValue("95 PREM") || "",
         "92 ECO": rive.getTextRunValue("92 ECO") || "",
         "92 EURO": rive.getTextRunValue("92 EURO") || "",
         "DIESEL": rive.getTextRunValue("DIESEL") || "",
         "GAS": rive.getTextRunValue("GAS") || "",
-        "COFFEE": rive.getTextRunValue("COFFEE") || ""
-      });
+        "COFFEE": rive.getTextRunValue("COFFEE") || "",
+        "95 PREM DISCOUNT": rive.getTextRunValue("95 PREM DISCOUNT") || "",
+        "92 EURO DISCOUNT": rive.getTextRunValue("92 EURO DISCOUNT") || "",
+        "92 ECO DISCOUNT": rive.getTextRunValue("92 ECO DISCOUNT") || "",
+        "DIESEL DISCOUNT": rive.getTextRunValue("DIESEL DISCOUNT") || "",
+        "GAS DISCOUNT": rive.getTextRunValue("GAS DISCOUNT") || ""
+      }));
       addLog("Чтение начальных значений текстовых полей завершено.");
     }
   }, [rive]);
@@ -132,12 +143,14 @@ export default function App() {
   // Обработчик ввода
   const handleInputChange = (e, variableName) => {
     const { value } = e.target;
+
     let pattern;
     if (variableName === "COFFEE") {
       // До 4 цифр
       pattern = /^\d{0,4}$/;
     } else {
-      // До 3 целых и 2 знака после запятой
+      // По умолчанию: до 3 целых и 2 знака после запятой
+      // (или пустая строка)
       pattern = /^\d{0,3}(\.\d{0,2})?$/;
     }
 
@@ -183,7 +196,7 @@ export default function App() {
       const fps = 60;
       const interval = 1000 / fps;
       let elapsed = 0;
-      const maxDuration = 14000; // 13 секунд
+      const maxDuration = 14000; // 13-14 секунд
       const totalFrames = Math.floor((maxDuration / 1000) * fps);
 
       let progressPercent = 0;
@@ -209,7 +222,9 @@ export default function App() {
           }
         }, interval);
       });
-      updateLastLog(`Шаг 2/5: Запись кадров завершена, всего ${frames.length} кадров.`);
+      updateLastLog(
+        `Шаг 2/5: Запись кадров завершена, всего ${frames.length} кадров.`
+      );
 
       // Шаг 3
       addLog("Шаг 3/5: Подготовка кадров...");
