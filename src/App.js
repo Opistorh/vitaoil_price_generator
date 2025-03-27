@@ -53,12 +53,10 @@ export default function App() {
 
   // Логи и функция для добавления лог-сообщений
   const [logs, setLogs] = useState([]);
-
   function addLog(message) {
     setLogs((prevLogs) => [message, ...prevLogs].slice(0, 200));
     console.log(message);
   }
-
   function updateLastLog(newMessage) {
     setLogs((prevLogs) => {
       if (prevLogs.length === 0) {
@@ -71,9 +69,18 @@ export default function App() {
     console.log("\r" + newMessage);
   }
 
-  // Инициализация Rive
+  // --- Переключатели для выбора конфигурации Rive ---
+  // Для стрелок: true = влево, false = вправо
+  const [isArrowLeft, setIsArrowLeft] = useState(false);
+  // Для GAS: true = включён, false = выключен
+  const [isGasOn, setIsGasOn] = useState(true);
+
+  // Формируем имя Rive-файла в зависимости от переключателей
+  const riveSrc = `arr_${isArrowLeft ? "left" : "right"}_gas_${isGasOn ? "on" : "off"}.riv`;
+
+  // Инициализация Rive – используем ключ для перерисовки при изменении файла
   const { rive, RiveComponent } = useRive({
-    src: "vitaoil_discount.riv",
+    src: riveSrc,
     stateMachines: stateMachineName,
     autoplay: true,
     layout: new Layout({
@@ -94,7 +101,9 @@ export default function App() {
     "92 ECO DISCOUNT": "",
     "92 EURO DISCOUNT": "",
     "DIESEL DISCOUNT": "",
-    "GAS DISCOUNT": ""
+    "GAS DISCOUNT": "",
+    "GAS_SALE": "",
+    "CASH_SALE": "" // Добавлено новое поле
   });
 
   // Массивы для упрощённой группировки полей
@@ -120,7 +129,6 @@ export default function App() {
       ffmpeg.on("log", ({ message }) => {
         addLog(`[ffmpeg] ${message}`);
       });
-
       await ffmpeg.load();
       ffmpegRef.current = ffmpeg;
       setIsFFmpegReady(true);
@@ -143,31 +151,65 @@ export default function App() {
         "92 ECO DISCOUNT": rive.getTextRunValue("92 ECO DISCOUNT") || "",
         "92 EURO DISCOUNT": rive.getTextRunValue("92 EURO DISCOUNT") || "",
         "DIESEL DISCOUNT": rive.getTextRunValue("DIESEL DISCOUNT") || "",
-        "GAS DISCOUNT": rive.getTextRunValue("GAS DISCOUNT") || ""
+        "GAS DISCOUNT": rive.getTextRunValue("GAS DISCOUNT") || "",
+        "GAS_SALE": rive.getTextRunValue("GAS_SALE") || "",
+        "CASH_SALE": rive.getTextRunValue("CASH_SALE") || "" // Чтение начального значения для CASH_SALE
       }));
       addLog("Чтение начальных значений текстовых полей завершено.");
     }
   }, [rive]);
 
   // Обработчик ввода
-  const handleInputChange = (e, variableName) => {
-    const { value } = e.target;
-    let pattern;
-    if (variableName === coffeeField) {
-      // До 4 цифр для COFFEE
-      pattern = /^\d{0,4}$/;
-    } else {
-      // До 3 целых и 2 знака после запятой
-      pattern = /^\d{0,3}(\.\d{0,2})?$/;
-    }
-
+const handleInputChange = (e, variableName) => {
+  const { value } = e.target;
+  let pattern;
+  if (variableName === coffeeField) {
+    // До 4 цифр для COFFEE
+    pattern = /^\d{0,4}$/;
     if (value === "" || pattern.test(value)) {
       setTextValues((prev) => ({ ...prev, [variableName]: value }));
       if (rive) {
         rive.setTextRunValue(variableName, value);
       }
     }
-  };
+  } else if (variableName === "GAS_SALE") {
+    // Для GAS_SALE: только цифры и точка, не более 3 символов и не более одной точки
+    if (
+      value === "" ||
+      (value.length <= 3 &&
+        /^[0-9.-]+$/.test(value) &&
+        value.split(".").length <= 2)
+    ) {
+      setTextValues((prev) => ({ ...prev, [variableName]: value }));
+      if (rive) {
+        rive.setTextRunValue(variableName, value);
+      }
+    }
+  } else if (variableName === "CASH_SALE") {
+    // Для CASH_SALE: те же условия, что и для GAS_SALE
+    if (
+      value === "" ||
+      (value.length <= 3 &&
+        /^[0-9.-]+$/.test(value) &&
+        value.split(".").length <= 2)
+    ) {
+      setTextValues((prev) => ({ ...prev, [variableName]: value }));
+      if (rive) {
+        rive.setTextRunValue(variableName, value);
+      }
+    }
+  } else {
+    // До 3 целых и 2 знака после запятой для остальных
+    pattern = /^\d{0,3}(\.\d{0,2})?$/;
+    if (value === "" || pattern.test(value)) {
+      setTextValues((prev) => ({ ...prev, [variableName]: value }));
+      if (rive) {
+        rive.setTextRunValue(variableName, value);
+      }
+    }
+  }
+};
+
 
   // Непосредственно запись, сборка и скачивание
   const handleRecordAndDownloadClick = async () => {
@@ -222,7 +264,6 @@ export default function App() {
               `Шаг 2/5: Запись кадров: ${getProgressBar(progressPercent)}`
             );
           }
-
           if (elapsed >= maxDuration) {
             clearInterval(timerId);
             resolve();
@@ -236,15 +277,9 @@ export default function App() {
       // Шаг 3
       addLog("Шаг 3/5: Подготовка кадров...");
       const ffmpeg = ffmpegRef.current;
-
-      // Очищаем старые файлы (если были)
       try {
         await ffmpeg.exec(["-v", "error", "-y", "-i", "frame_%04d.png", "dummy.webm"]);
-      } catch {
-        // Игнорируем ошибку
-      }
-
-      // Загружаем кадры
+      } catch {}
       addLog("   Загружаем кадры во внутреннюю ФС...");
       for (let i = 0; i < frames.length; i++) {
         const indexStr = String(i + 1).padStart(4, "0");
@@ -257,19 +292,15 @@ export default function App() {
       }
       updateLastLog("Шаг 3/5: Подготовка кадров — завершена.");
 
-      // Шаг 4: Сборка
+      // Шаг 4: Сборка видео
       addLog("Шаг 4/5: Сборка видео (MP4, libx264)...");
       let buildCount = 0;
-      const TOTAL_PACKETS = 80; // Примерная оценка
+      const TOTAL_PACKETS = 80;
       ffmpeg.on("progress", () => {
         buildCount++;
-        const percent = Math.min(
-          100,
-          Math.round((buildCount / TOTAL_PACKETS) * 100)
-        );
+        const percent = Math.min(100, Math.round((buildCount / TOTAL_PACKETS) * 100));
         updateLastLog(`Шаг 4/5: Сборка видео: ${getProgressBar(percent)}`);
       });
-
       await ffmpeg.exec([
         "-framerate",
         "60",
@@ -283,7 +314,6 @@ export default function App() {
         "yuv420p",
         "output.mp4"
       ]);
-
       updateLastLog("Шаг 4/5: Сборка видео — завершена.");
 
       // Шаг 5: Скачивание
@@ -293,7 +323,6 @@ export default function App() {
         throw new Error("Файл output.mp4 пуст или не прочитан!");
       }
       addLog("   Видео собрано в память.");
-
       const videoBlob = new Blob([outputData.buffer], { type: "video/mp4" });
       const videoUrl = URL.createObjectURL(videoBlob);
       const a = document.createElement("a");
@@ -303,7 +332,6 @@ export default function App() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(videoUrl);
-
       addLog("Готово! Файл animation.mp4 скачан.");
     } catch (err) {
       addLog("Ошибка: " + err);
@@ -336,7 +364,6 @@ export default function App() {
   const columnStyle = {
     flex: "1"
   };
-  // Обёртка для «лейбл + инпут» (вертикальное расположение)
   const fieldWrapperStyle = {
     display: "flex",
     flexDirection: "column",
@@ -350,19 +377,52 @@ export default function App() {
     width: "100px",
     padding: "4px"
   };
+  const toggleStyle = {
+    display: "flex",
+    alignItems: "center",
+    marginBottom: "1rem"
+  };
 
   return (
     <div className="App" style={{ fontFamily: "sans-serif", padding: "1rem" }}>
       <div style={containerStyle}>
+        {/* Переключатели для выбора конфигурации Rive */}
+        {!isProcessing && (
+          <div style={{ marginBottom: "1rem" }}>
+            <div style={toggleStyle}>
+              <input
+                type="checkbox"
+                id="arrowToggle"
+                checked={isArrowLeft}
+                onChange={(e) => setIsArrowLeft(e.target.checked)}
+              />
+              <label htmlFor="arrowToggle" style={{ marginLeft: "8px" }}>
+                Стрелки влево (без галочки – вправо)
+              </label>
+            </div>
+            <div style={toggleStyle}>
+              <input
+                type="checkbox"
+                id="gasToggle"
+                checked={isGasOn}
+                onChange={(e) => setIsGasOn(e.target.checked)}
+              />
+              <label htmlFor="gasToggle" style={{ marginLeft: "8px" }}>
+                GAS включён (без галочки – выключен)
+              </label>
+            </div>
+          </div>
+        )}
+
+        {/* Rive-компонент с key для перерисовки при смене файла */}
         <div style={riveStyle}>
-          <RiveComponent />
+          <RiveComponent key={riveSrc} />
         </div>
 
         {!isProcessing && (
           <>
             {/* Блок с двумя колонками */}
             <div style={twoColumnsWrapper}>
-              {/* Левая колонка (обычные цены) */}
               <div style={columnStyle}>
                 {leftFields.map((field) => (
                   <div key={field} style={fieldWrapperStyle}>
@@ -376,8 +436,6 @@ export default function App() {
                   </div>
                 ))}
               </div>
-
-              {/* Правая колонка (цены со скидкой) */}
               <div style={columnStyle}>
                 {rightFields.map((field) => (
                   <div key={field} style={fieldWrapperStyle}>
@@ -392,8 +450,6 @@ export default function App() {
                 ))}
               </div>
             </div>
-
-            {/* Отдельная строка для COFFEE на всю ширину */}
             <div style={{ marginTop: "1rem" }}>
               <div style={fieldWrapperStyle}>
                 <div style={labelStyle}>{coffeeField}:</div>
@@ -404,9 +460,29 @@ export default function App() {
                   style={inputStyle}
                 />
               </div>
+              {/* Новый инпут для GAS_SALE */}
+              <div style={fieldWrapperStyle}>
+                <div style={labelStyle}>Скидка на ГАЗ от 10л:</div>
+                <input
+                  type="text"
+                  value={textValues["GAS_SALE"]}
+                  onChange={(e) => handleInputChange(e, "GAS_SALE")}
+                  style={inputStyle}
+                  //placeholder="2.5"
+                />
+              </div>
+              {/* Новый инпут для CASH_SALE */}
+              <div style={fieldWrapperStyle}>
+                <div style={labelStyle}>Скидка за наличные:</div>
+                <input
+                  type="text"
+                  value={textValues["CASH_SALE"]}
+                  onChange={(e) => handleInputChange(e, "CASH_SALE")}
+                  style={inputStyle}
+                  //placeholder="2.5"
+                />
+              </div>
             </div>
-
-            {/* Кнопка "Скачать видео" */}
             <div style={{ marginTop: "20px", ...fullWidthStyle }}>
               <button
                 onClick={handleRecordAndDownloadClick}
@@ -424,7 +500,6 @@ export default function App() {
           </>
         )}
 
-        {/* "Консоль" логов */}
         <div style={{ marginTop: "20px", ...fullWidthStyle }}>
           <div
             style={{
