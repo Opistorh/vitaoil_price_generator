@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRive, Layout, Fit, Alignment } from "@rive-app/react-canvas";
 import { useRiveRecorder } from "./hooks/useRiveRecorder";
 import { addLog, updateLastLog } from "./logger";
@@ -38,28 +38,28 @@ export default function App() {
   const handleInputChange = (e, variableName) =>
     handleInputChangeUtil({ e, variableName, setTextValues, rive });
 
+  // Подключение хука useRiveRecorder
   const { isReady: isFFmpegReady, isProcessing, recordAndDownload } = useRiveRecorder({
     addLog: handleAddLog,
     updateLastLog: handleUpdateLastLog
   });
-  
 
-return (
-  <MainLayout
-    rive={rive}
-    RiveComponent={RiveComponent}
-    riveSrc={riveSrc}
-    stateMachineName={stateMachineName}
-    textValues={textValues}
-    handleInputChange={handleInputChange}
-    isArrowLeft={isArrowLeft}
-    setIsArrowLeft={setIsArrowLeft}
-    isGasOn={isGasOn}
-    setIsGasOn={setIsGasOn}
-    isProcessing={isProcessing}
-    isFFmpegReady={isFFmpegReady}
-    recordAndDownload={handleDownload}
-    logs={logs}
-  />
-)
-};
+  return (
+    <MainLayout
+      rive={rive}
+      RiveComponent={RiveComponent}
+      riveSrc={riveSrc}
+      stateMachineName={stateMachineName}
+      textValues={textValues}
+      handleInputChange={handleInputChange}
+      isArrowLeft={isArrowLeft}
+      setIsArrowLeft={setIsArrowLeft}
+      isGasOn={isGasOn}
+      setIsGasOn={setIsGasOn}
+      isProcessing={isProcessing}
+      isFFmpegReady={isFFmpegReady}
+      recordAndDownload={handleDownload}
+      logs={logs}
+    />
+  );
+}
