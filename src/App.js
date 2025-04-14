@@ -2,42 +2,17 @@ import React, { useState, useEffect } from "react";
 import "./styles.css";
 import { useRive, Layout, Fit, Alignment } from "@rive-app/react-canvas";
 import { useRiveRecorder } from "./hooks/useRiveRecorder";
+import { parseLog, addLog, updateLastLog } from "./logger";
 
-function parseLog(log) {
-  const progressBarRegex = /\[[#-]+\]\s?\d+%/;
-  const match = log.match(progressBarRegex);
-  if (!match) return log;
-  const index = match.index;
-  const progressPart = match[0];
-  const before = log.slice(0, index);
-  const after = log.slice(index + progressPart.length);
-
-  return (
-    <>
-      {before}
-      <span className="log-highlight">{progressPart}</span>
-      {after}
-    </>
-  );
-}
 
 export default function App() {
   const stateMachineName = "State Machine 1";
-  const [logs, setLogs] = useState([]);
-  function addLog(message) {
-    setLogs((prevLogs) => [message, ...prevLogs].slice(0, 200));
-    console.log(message);
-  }
-  function updateLastLog(newMessage) {
-    setLogs((prevLogs) => {
-      if (prevLogs.length === 0) return [newMessage];
-      const newLogs = [...prevLogs];
-      newLogs[0] = newMessage;
-      return newLogs;
-    });
-    console.log("\r" + newMessage);
-  }
 
+  const [logs, setLogs] = useState([]);
+
+  const handleAddLog = (message) => addLog(setLogs, message);
+  const handleUpdateLastLog = (newMessage) => updateLastLog(setLogs, newMessage);
+  
   const [isArrowLeft, setIsArrowLeft] = useState(false);
   const [isGasOn, setIsGasOn] = useState(true);
   const riveSrc = `arr_${isArrowLeft ? "left" : "right"}_gas_${isGasOn ? "on" : "off"}.riv`;
@@ -60,6 +35,7 @@ export default function App() {
   const coffeeField = "COFFEE";
 
   useEffect(() => {
+    
     if (rive) {
       setTextValues((prev) => ({
         ...prev,
@@ -77,7 +53,7 @@ export default function App() {
         "GAS_SALE": rive.getTextRunValue("GAS_SALE") || "",
         "CASH_SALE": rive.getTextRunValue("CASH_SALE") || ""
       }));
-      addLog("Чтение начальных значений текстовых полей завершено.");
+      handleAddLog("Чтение начальных значений текстовых полей завершено.");
     }
   }, [rive]);
 
@@ -107,13 +83,15 @@ export default function App() {
     }
   };
 
+
   const { isReady: isFFmpegReady, isProcessing, recordAndDownload } = useRiveRecorder({
-    addLog,
-    updateLastLog
+    addLog: handleAddLog,
+    updateLastLog: handleUpdateLastLog
   });
 
+
   return (
-    <div className="App">
+    <div className="App" translate="no">
       <div className="container">
         {!isProcessing && (
           <div>
