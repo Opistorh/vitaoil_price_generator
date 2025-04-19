@@ -1,3 +1,4 @@
+// src/utils/handleInputChange.js
 import { coffeeField } from "../fieldConfig";
 
 export function handleInputChange({ e, variableName, setTextValues, rive }) {
@@ -13,7 +14,9 @@ export function handleInputChange({ e, variableName, setTextValues, rive }) {
   } else if (["GAS_SALE", "CASH_SALE"].includes(variableName)) {
     if (
       value === "" ||
-      (value.length <= 3 && /^[0-9.-]+$/.test(value) && value.split(".").length <= 2)
+      (value.length <= 3 &&
+        /^[0-9.-]+$/.test(value) &&
+        value.split(".").length <= 2)
     ) {
       setTextValues((prev) => ({ ...prev, [variableName]: value }));
       rive?.setTextRunValue(variableName, value);
