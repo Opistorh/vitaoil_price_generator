@@ -3,18 +3,44 @@
 const COOKIE_NAME = "textValues";
 
 export function saveTextValuesToCookies(values) {
-  const json = JSON.stringify(values);
-  document.cookie = `${COOKIE_NAME}=${encodeURIComponent(json)}; path=/; max-age=31536000`; // 1 год
+  document.cookie = `textValues=${JSON.stringify(values)}; path=/`;
 }
 
 export function loadTextValuesFromCookies() {
-  const match = document.cookie.match(new RegExp(`${COOKIE_NAME}=([^;]+)`));
-  if (match) {
-    try {
-      return JSON.parse(decodeURIComponent(match[1]));
-    } catch {
-      return null;
-    }
+  const match = document.cookie.match(/(^| )textValues=([^;]+)/);
+  try {
+    const decoded = match ? decodeURIComponent(match[2]) : null;
+    return decoded ? JSON.parse(decoded) : null;
+  } catch {
+    return null;
   }
-  return null;
+}
+
+// ⬇️ Новые функции для чекбоксов:
+export function saveCheckboxesToCookies({
+  includeCoffee,
+  isArrowLeft,
+  isGasOn,
+}) {
+  const state = { includeCoffee, isArrowLeft, isGasOn };
+  document.cookie = `checkboxStates=${JSON.stringify(state)}; path=/`;
+}
+
+export function loadCheckboxesFromCookies() {
+  const match = document.cookie.match(/(^| )checkboxStates=([^;]+)/);
+  try {
+    const decoded = match ? decodeURIComponent(match[2]) : null;
+    const parsed = decoded ? JSON.parse(decoded) : {};
+    return {
+      includeCoffee: parsed.includeCoffee ?? true,
+      isArrowLeft: parsed.isArrowLeft ?? false,
+      isGasOn: parsed.isGasOn ?? true,
+    };
+  } catch {
+    return {
+      includeCoffee: true,
+      isArrowLeft: false,
+      isGasOn: true,
+    };
+  }
 }

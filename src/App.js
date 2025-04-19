@@ -8,6 +8,8 @@ import { handleInputChange as handleInputChangeUtil } from "./utils/handleInputC
 import {
   saveTextValuesToCookies,
   loadTextValuesFromCookies,
+  saveCheckboxesToCookies,
+  loadCheckboxesFromCookies,
 } from "./utils/cookies";
 import initialValues from "./initialValues";
 import MainLayout from "./components/MainLayout";
@@ -40,8 +42,13 @@ export default function App() {
 
   // Загружаем из cookies или initialValues при старте
   useEffect(() => {
-    const loaded = loadTextValuesFromCookies() || initialValues;
-    setTextValues(loaded);
+    const loadedText = loadTextValuesFromCookies() || initialValues;
+    setTextValues(loadedText);
+
+    const { includeCoffee, isArrowLeft, isGasOn } = loadCheckboxesFromCookies();
+    setIncludeCoffee(includeCoffee);
+    setIsArrowLeft(isArrowLeft);
+    setIsGasOn(isGasOn);
   }, []);
 
   // Когда Rive и значения загружены, проставляем их в Rive
@@ -68,6 +75,7 @@ export default function App() {
   const handleDownload = () => {
     if (textValues) {
       saveTextValuesToCookies(textValues);
+      saveCheckboxesToCookies({ includeCoffee, isArrowLeft, isGasOn });
       recordAndDownload({ rive, stateMachineName, includeCoffee });
     }
   };
