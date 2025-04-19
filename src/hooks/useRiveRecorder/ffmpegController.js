@@ -51,13 +51,15 @@ export async function buildFinalVideo({
       "-filter_complex",
       `[0:v]fps=30,format=yuv420p[v0];` +
         `[1:v]fps=30,scale=${width}:${height}:force_original_aspect_ratio=increase,crop=${width}:${height},format=yuv420p[v1];` +
-        `[v0][v1]concat=n=2:v=1:a=0[out]`,
+        `[v0][v1]concat=n=2:v=1:a=0:unsafe=1[out]`,
       "-map",
       "[out]",
       "-c:v",
       "libx264",
       "-pix_fmt",
       "yuv420p",
+      "-t",
+      "19",
       "output.mp4",
     ]);
 
