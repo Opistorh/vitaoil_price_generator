@@ -1,8 +1,16 @@
+//  src\hooks\useRiveRecorder\frameRecorder.js
+
 import { dataURLtoBlob } from "./utils/dataURLtoBlob";
 import { getProgressBar } from "./utils/getProgressBar";
 import { fetchFile } from "@ffmpeg/util";
 
-export async function recordFrames({ rive, stateMachineName, addLog, updateLastLog, ffmpeg }) {
+export async function recordFrames({
+  rive,
+  stateMachineName,
+  addLog,
+  updateLastLog,
+  ffmpeg,
+}) {
   addLog("Шаг 1/6: Запуск анимации...");
   rive.stop(stateMachineName);
   rive.play(stateMachineName);
@@ -29,7 +37,9 @@ export async function recordFrames({ rive, stateMachineName, addLog, updateLastL
       const newPercent = Math.floor((currentFrame / totalFrames) * 100);
       if (newPercent !== progressPercent) {
         progressPercent = newPercent;
-        updateLastLog(`Шаг 2/6: Запись кадров: ${getProgressBar(progressPercent)}`);
+        updateLastLog(
+          `Шаг 2/6: Запись кадров: ${getProgressBar(progressPercent)}`
+        );
       }
       if (elapsed >= maxDuration) {
         clearInterval(timerId);
@@ -59,16 +69,24 @@ export async function recordFrames({ rive, stateMachineName, addLog, updateLastL
 
   ffmpeg.on("progress", () => {
     buildCount++;
-    const percent = Math.min(100, Math.round((buildCount / TOTAL_PACKETS) * 100));
+    const percent = Math.min(
+      100,
+      Math.round((buildCount / TOTAL_PACKETS) * 100)
+    );
     updateLastLog(`Шаг 4/6: Сборка видео: ${getProgressBar(percent)}`);
   });
 
   await ffmpeg.exec([
-    "-framerate", "30",
-    "-start_number", "1",
-    "-i", "frame_%04d.png",
-    "-c:v", "libx264",
-    "-pix_fmt", "yuv420p",
+    "-framerate",
+    "30",
+    "-start_number",
+    "1",
+    "-i",
+    "frame_%04d.png",
+    "-c:v",
+    "libx264",
+    "-pix_fmt",
+    "yuv420p",
     "main.mp4",
   ]);
 

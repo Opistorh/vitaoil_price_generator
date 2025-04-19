@@ -1,5 +1,11 @@
+// src\hooks\useRiveRecorder\index.js
+
 import { useRef, useState, useEffect } from "react";
-import { initFFmpeg, handleFFmpegLogs, buildFinalVideo } from "./ffmpegController";
+import {
+  initFFmpeg,
+  handleFFmpegLogs,
+  buildFinalVideo,
+} from "./ffmpegController";
 import { recordFrames } from "./frameRecorder";
 import { fetchFile } from "@ffmpeg/util";
 
@@ -19,7 +25,11 @@ export function useRiveRecorder({ addLog, updateLastLog }) {
     })();
   }, []);
 
-  const recordAndDownload = async ({ rive, stateMachineName }) => {
+  const recordAndDownload = async ({
+    rive,
+    stateMachineName,
+    includeCoffee,
+  }) => {
     if (!rive) return alert("Rive не инициализирован!");
     if (!isReady) return alert("FFmpeg ещё не готов!");
     if (isProcessing) return alert("Уже идёт запись/конвертация!");
@@ -30,8 +40,21 @@ export function useRiveRecorder({ addLog, updateLastLog }) {
       const ffmpeg = ffmpegRef.current;
       const resolutionRef = outputResolutionRef;
 
-      await recordFrames({ rive, stateMachineName, addLog, updateLastLog, ffmpeg });
-      await buildFinalVideo({ ffmpeg, resolutionRef, addLog, updateLastLog, fetchFile });
+      await recordFrames({
+        rive,
+        stateMachineName,
+        addLog,
+        updateLastLog,
+        ffmpeg,
+      });
+      await buildFinalVideo({
+        ffmpeg,
+        resolutionRef,
+        addLog,
+        updateLastLog,
+        fetchFile,
+        includeCoffee,
+      });
     } catch (err) {
       addLog("Ошибка: " + err);
       alert("Произошла ошибка:\n" + err.message);

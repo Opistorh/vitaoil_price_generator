@@ -1,3 +1,5 @@
+// src\hooks\useRiveRecorder\ffmpegController.js
+
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 
 export async function initFFmpeg(addLog) {
@@ -22,33 +24,54 @@ export function handleFFmpegLogs(ffmpeg, addLog, outputResolutionRef) {
   });
 }
 
-export async function buildFinalVideo({ ffmpeg, resolutionRef, addLog, updateLastLog, fetchFile }) {
+export async function buildFinalVideo({
+  ffmpeg,
+  resolutionRef,
+  addLog,
+  updateLastLog,
+  fetchFile,
+  includeCoffee,
+}) {
   const { width, height } = resolutionRef.current || {};
-  if (!width || !height) throw new Error("Не удалось определить разрешение Rive-видео");
+  if (!width || !height)
+    throw new Error("Не удалось определить разрешение Rive-видео");
 
-  addLog("Шаг 5/6: Склейка с coffee.mp4...");
-  const coffeeData = await fetchFile("/coffee.mp4");
-  await ffmpeg.writeFile("coffee.mp4", coffeeData);
+  if (includeCoffee) {
+    addLog("Шаг 5/6: Склейка с coffee.mp4...");
+    const coffeeData = await fetchFile("/coffee.mp4");
+    await ffmpeg.writeFile("coffee.mp4", coffeeData);
 
-  await ffmpeg.exec([
-    "-i", "main.mp4",
-    "-r", "30",
-    "-i", "coffee.mp4",
-    "-filter_complex",
-    `[0:v]fps=30,format=yuv420p[v0];` +
-    `[1:v]fps=30,scale=${width}:${height}:force_original_aspect_ratio=increase,crop=${width}:${height},format=yuv420p[v1];` +
-    `[v0][v1]concat=n=2:v=1:a=0[out]`,
-    "-map", "[out]",
-    "-c:v", "libx264",
-    "-pix_fmt", "yuv420p",
-    "output.mp4",
-  ]);
+    await ffmpeg.exec([
+      "-i",
+      "main.mp4",
+      "-r",
+      "30",
+      "-i",
+      "coffee.mp4",
+      "-filter_complex",
+      `[0:v]fps=30,format=yuv420p[v0];` +
+        `[1:v]fps=30,scale=${width}:${height}:force_original_aspect_ratio=increase,crop=${width}:${height},format=yuv420p[v1];` +
+        `[v0][v1]concat=n=2:v=1:a=0[out]`,
+      "-map",
+      "[out]",
+      "-c:v",
+      "libx264",
+      "-pix_fmt",
+      "yuv420p",
+      "output.mp4",
+    ]);
 
-  updateLastLog("Шаг 5/6: Склейка завершена.");
+    updateLastLog("Шаг 5/6: Склейка завершена.");
+  } else {
+    addLog("Шаг 5/6: Копирование main.mp4 без добавления кофе...");
+    await ffmpeg.rename("main.mp4", "output.mp4");
+    updateLastLog("Шаг 5/6: Пропущена склейка, используем только Rive-видео.");
+  }
 
   addLog("Шаг 6/6: Скачивание результата...");
   const outputData = await ffmpeg.readFile("output.mp4");
-  if (!outputData?.length) throw new Error("Файл output.mp4 пуст или не прочитан!");
+  if (!outputData?.length)
+    throw new Error("Файл output.mp4 пуст или не прочитан!");
 
   const videoBlob = new Blob([outputData.buffer], { type: "video/mp4" });
   const videoUrl = URL.createObjectURL(videoBlob);

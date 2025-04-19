@@ -18,7 +18,9 @@ export default function MainLayout({
   isProcessing,
   isFFmpegReady,
   recordAndDownload,
-  logs
+  logs,
+  includeCoffee,
+  setIncludeCoffee,
 }) {
   return (
     <div className="App" translate="no">
@@ -32,7 +34,9 @@ export default function MainLayout({
                 checked={isArrowLeft}
                 onChange={(e) => setIsArrowLeft(e.target.checked)}
               />
-              <label htmlFor="arrowToggle">Стрелки влево (без галочки – вправо)</label>
+              <label htmlFor="arrowToggle">
+                Стрелки влево (без галочки – вправо)
+              </label>
             </div>
             <div className="toggle">
               <input
@@ -41,7 +45,18 @@ export default function MainLayout({
                 checked={isGasOn}
                 onChange={(e) => setIsGasOn(e.target.checked)}
               />
-              <label htmlFor="gasToggle">GAS включён (без галочки – выключен)</label>
+              <label htmlFor="gasToggle">
+                GAS включён (без галочки – выключен)
+              </label>
+            </div>
+            <div className="toggle">
+              <input
+                type="checkbox"
+                id="coffeeToggle"
+                checked={includeCoffee}
+                onChange={(e) => setIncludeCoffee(e.target.checked)}
+              />
+              <label htmlFor="coffeeToggle">Добавить видео про кофе</label>
             </div>
           </div>
         )}

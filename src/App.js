@@ -1,3 +1,5 @@
+// src\App.js
+
 import React, { useState, useEffect } from "react";
 import { useRive, Layout, Fit, Alignment } from "@rive-app/react-canvas";
 import { useRiveRecorder } from "./hooks/useRiveRecorder";
@@ -20,9 +22,11 @@ export default function App() {
   const handleUpdateLastLog = (newMessage) =>
     updateLastLog(setLogs, newMessage);
 
+  const [includeCoffee, setIncludeCoffee] = useState(true); // по умолчанию включено
+
   const handleDownload = () => {
     saveTextValuesToCookies(textValues);
-    recordAndDownload({ rive, stateMachineName });
+    recordAndDownload({ rive, stateMachineName, includeCoffee });
   };
 
   const [isArrowLeft, setIsArrowLeft] = useState(false);
@@ -79,6 +83,8 @@ export default function App() {
       isFFmpegReady={isFFmpegReady}
       recordAndDownload={handleDownload}
       logs={logs}
+      includeCoffee={includeCoffee}
+      setIncludeCoffee={setIncludeCoffee}
     />
   );
 }

@@ -1,4 +1,5 @@
 // src/utils/handleInputChange.js
+
 import { coffeeField } from "../fieldConfig";
 
 export function handleInputChange({ e, variableName, setTextValues, rive }) {
