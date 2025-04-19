@@ -70,7 +70,12 @@ export default function MainLayout({
             <div className="columns">
               <div className="column">
                 {leftFields.map((field) => (
-                  <div key={field} className="field">
+                  <div
+                    key={field}
+                    className={`field ${
+                      !isGasOn && field === "GAS" ? "hidden" : ""
+                    }`}
+                  >
                     <div className="label">{field}</div>
                     <input
                       type="text"
@@ -83,7 +88,12 @@ export default function MainLayout({
               </div>
               <div className="column">
                 {rightFields.map((field) => (
-                  <div key={field} className="field">
+                  <div
+                    key={field}
+                    className={`field ${
+                      !isGasOn && field === "GAS DISCOUNT" ? "hidden" : ""
+                    }`}
+                  >
                     <div className="label">Со скидкой</div>
                     <input
                       type="text"
@@ -106,7 +116,8 @@ export default function MainLayout({
                   onChange={(e) => handleInputChange(e, coffeeField)}
                 />
               </div>
-              <div className="field">
+
+              <div className={`field ${!isGasOn ? "hidden" : ""}`}>
                 <div className="label">Скидка на ГАЗ от 10л:</div>
                 <input
                   type="text"
@@ -115,6 +126,7 @@ export default function MainLayout({
                   onChange={(e) => handleInputChange(e, "GAS_SALE")}
                 />
               </div>
+
               <div className="field">
                 <div className="label">Скидка за наличные:</div>
                 <input

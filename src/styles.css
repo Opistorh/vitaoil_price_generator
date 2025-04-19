@@ -2,11 +2,9 @@ body {
   background-color: #19191d;
 }
 
-
 .text-run-control {
   margin-top: 8px;
 }
-
 
 .App {
   font-family: sans-serif;
@@ -81,12 +79,12 @@ body {
 
 .log-entry {
   margin-bottom: 0.2rem;
-  color: #FFFFFF;
+  color: #ffffff;
   font-size: 10px;
 }
 
 .log-highlight {
-  color: #00FF00;
+  color: #00ff00;
 }
 
 .download-button {
@@ -98,4 +96,8 @@ body {
 
 .download-button:disabled {
   cursor: default;
+}
+
+.hidden {
+  display: none;
 }
