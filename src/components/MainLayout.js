@@ -65,7 +65,7 @@ export default function MainLayout({
           <RiveComponent key={riveSrc} />
         </div>
 
-        {!isProcessing && (
+        {!isProcessing && textValues && (
           <>
             <div className="columns">
               <div className="column">

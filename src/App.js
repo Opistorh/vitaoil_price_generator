@@ -17,17 +17,11 @@ export default function App() {
   const stateMachineName = "State Machine 1";
 
   const [logs, setLogs] = useState([]);
-
   const handleAddLog = (message) => addLog(setLogs, message);
   const handleUpdateLastLog = (newMessage) =>
     updateLastLog(setLogs, newMessage);
 
-  const [includeCoffee, setIncludeCoffee] = useState(true); // по умолчанию включено
-
-  const handleDownload = () => {
-    saveTextValuesToCookies(textValues);
-    recordAndDownload({ rive, stateMachineName, includeCoffee });
-  };
+  const [includeCoffee, setIncludeCoffee] = useState(true);
 
   const [isArrowLeft, setIsArrowLeft] = useState(false);
   const [isGasOn, setIsGasOn] = useState(true);
@@ -42,22 +36,26 @@ export default function App() {
     layout: new Layout({ fit: Fit.Cover, alignment: Alignment.Center }),
   });
 
-  const savedValues = loadTextValuesFromCookies();
-  const [textValues, setTextValues] = useState(savedValues || initialValues);
+  const [textValues, setTextValues] = useState(null);
 
-  // Применяем сохранённые значения в Rive, когда он готов
+  // Загружаем из cookies или initialValues при старте
   useEffect(() => {
-    if (rive && savedValues) {
-      Object.entries(savedValues).forEach(([key, value]) => {
+    const loaded = loadTextValuesFromCookies() || initialValues;
+    setTextValues(loaded);
+  }, []);
+
+  // Когда Rive и значения загружены, проставляем их в Rive
+  useEffect(() => {
+    if (rive && textValues) {
+      Object.entries(textValues).forEach(([key, value]) => {
         rive.setTextRunValue?.(key, value);
       });
     }
-  }, [rive, savedValues]);
+  }, [rive, textValues]);
 
   const handleInputChange = (e, variableName) =>
     handleInputChangeUtil({ e, variableName, setTextValues, rive });
 
-  // Подключение хука useRiveRecorder
   const {
     isReady: isFFmpegReady,
     isProcessing,
@@ -66,6 +64,13 @@ export default function App() {
     addLog: handleAddLog,
     updateLastLog: handleUpdateLastLog,
   });
+
+  const handleDownload = () => {
+    if (textValues) {
+      saveTextValuesToCookies(textValues);
+      recordAndDownload({ rive, stateMachineName, includeCoffee });
+    }
+  };
 
   return (
     <MainLayout
