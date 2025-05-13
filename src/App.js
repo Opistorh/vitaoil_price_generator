@@ -87,6 +87,50 @@ export default function App() {
     }
   };
 
+  // Initial synchronization with Rive
+  useEffect(() => {
+    const vmi = riveRef.current?.vmi;
+    if (!vmi) return;
+
+    try {
+      // Load and sync text values
+      const loadedText = loadTextValuesFromCookies() || initialValues;
+      setTextValues(loadedText);
+      
+      Object.entries(loadedText).forEach(([key, value]) => {
+        console.log(`Initial sync: Setting text ${key} to:`, value);
+        riveRef.current?.setTextRunValue(key, value);
+      });
+
+      // Load and sync checkbox values
+      const { includeCoffee, isCoffeeOn, isArrowLeft, isGasOn } = loadCheckboxesFromCookies();
+      setIncludeCoffee(includeCoffee);
+      setCoffeeOn(isCoffeeOn);
+      setIsArrowLeft(isArrowLeft);
+      setIsGasOn(isGasOn);
+
+      // Sync boolean properties
+      const arrowsProp = vmi.boolean("arrows_left");
+      if (arrowsProp) {
+        arrowsProp.value = isArrowLeft;
+      }
+
+      const coffeeProp = vmi.boolean("coffee_price_show");
+      if (coffeeProp) {
+        coffeeProp.value = isCoffeeOn;
+      }
+
+      const gasProp = vmi.boolean("gas_price_show");
+      if (gasProp) {
+        gasProp.value = isGasOn;
+      }
+
+      console.log('Initial sync complete:', { loadedText, includeCoffee, isCoffeeOn, isArrowLeft, isGasOn });
+    } catch (error) {
+      console.error('Error during initial sync:', error);
+    }
+  }, [riveRef.current?.vmi]); // Run when View Model Instance becomes available
+
   // Load initial values
   useEffect(() => {
     const loadedText = loadTextValuesFromCookies() || initialValues;
