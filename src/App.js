@@ -77,15 +77,22 @@ export default function App() {
 
   // Sync View Model inputs with checkbox states
   useEffect(() => {
-    console.log('Checkbox states changed:', {
+    console.log('1. Checkbox states changed:', {
       isArrowLeft,
       isCoffeeOn,
       isGasOn
     });
     
+    console.log('2. Setting View Model state variables...');
     setArrowsLeft(isArrowLeft);
     setCoffeePriceShow(isCoffeeOn);
     setGasPriceShow(isGasOn);
+
+    console.log('3. Current View Model states after setting:', {
+      arrowsLeft,
+      coffeePriceShow,
+      gasPriceShow
+    });
   }, [isArrowLeft, isCoffeeOn, isGasOn]);
 
   const handleInputChange = (e, variableName) =>

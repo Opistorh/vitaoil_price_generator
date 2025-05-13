@@ -34,7 +34,10 @@ export default function MainLayout({
                 type="checkbox"
                 id="arrowToggle"
                 checked={isArrowLeft}
-                onChange={(e) => setIsArrowLeft(e.target.checked)}
+                onChange={(e) => {
+                  console.log('0. Checkbox arrow changed to:', e.target.checked);
+                  setIsArrowLeft(e.target.checked);
+                }}
               />
               <label htmlFor="arrowToggle">
                 Стрелки влево (без галочки – вправо)
@@ -45,7 +48,10 @@ export default function MainLayout({
                 type="checkbox"
                 id="gasToggle"
                 checked={isGasOn}
-                onChange={(e) => setIsGasOn(e.target.checked)}
+                onChange={(e) => {
+                  console.log('0. Checkbox gas changed to:', e.target.checked);
+                  setIsGasOn(e.target.checked);
+                }}
               />
               <label htmlFor="gasToggle">
                 GAS включён (без галочки – выключен)
@@ -56,7 +62,10 @@ export default function MainLayout({
                 type="checkbox"
                 id="coffeeToggle"
                 checked={includeCoffee}
-                onChange={(e) => setIncludeCoffee(e.target.checked)}
+                onChange={(e) => {
+                  console.log('0. Checkbox coffee changed to:', e.target.checked);
+                  setIncludeCoffee(e.target.checked);
+                }}
               />
               <label htmlFor="coffeeToggle">Добавить видео про кофе</label>
             </div>
