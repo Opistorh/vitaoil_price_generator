@@ -44,13 +44,13 @@ export default function App() {
       }),
       autoBind: false,
       onLoad: () => {
-        console.log('Rive loaded, initializing View Model...');
+        //console.log('Rive loaded, initializing View Model...');
         initializeViewModel();
       },
     });
 
     return () => {
-      console.log('Cleaning up Rive...');
+      //console.log('Cleaning up Rive...');
       riveRef.current?.cleanup();
     };
   }, []);
@@ -64,24 +64,24 @@ export default function App() {
     }
 
     try {
-      console.log('Getting View Model...');
+      //console.log('Getting View Model...');
       const vm = rive.viewModelByName(viewModelName);
       if (!vm) {
         console.error(`View Model "${viewModelName}" not found`);
         return;
       }
 
-      console.log('Creating View Model instance...');
+      //console.log('Creating View Model instance...');
       const vmi = vm.defaultInstance();
       if (!vmi) {
         console.error("Failed to create View Model instance");
         return;
       }
 
-      console.log('Binding View Model instance...');
+      //console.log('Binding View Model instance...');
       rive.bindViewModelInstance(vmi);
       riveRef.current.vmi = vmi;
-      console.log('View Model successfully initialized and bound');
+      //console.log('View Model successfully initialized and bound');
     } catch (error) {
       console.error('Error in View Model initialization:', error);
     }
@@ -104,27 +104,27 @@ export default function App() {
     const vmi = riveRef.current?.vmi;
     if (!vmi) return;
 
-    console.log('Syncing boolean properties:', { isArrowLeft, isCoffeeOn, isGasOn });
+    //console.log('Syncing boolean properties:', { isArrowLeft, isCoffeeOn, isGasOn });
 
     try {
       // Arrows
       const arrowsProp = vmi.boolean("arrows_left");
       if (arrowsProp) {
-        console.log('Setting arrows_left to:', isArrowLeft);
+        //console.log('Setting arrows_left to:', isArrowLeft);
         arrowsProp.value = isArrowLeft;
       }
 
       // Coffee
       const coffeeProp = vmi.boolean("coffee_price_show");
       if (coffeeProp) {
-        console.log('Setting coffee_price_show to:', isCoffeeOn);
+        //console.log('Setting coffee_price_show to:', isCoffeeOn);
         coffeeProp.value = isCoffeeOn;
       }
 
       // Gas
       const gasProp = vmi.boolean("gas_price_show");
       if (gasProp) {
-        console.log('Setting gas_price_show to:', isGasOn);
+        //console.log('Setting gas_price_show to:', isGasOn);
         gasProp.value = isGasOn;
       }
     } catch (error) {
@@ -141,7 +141,7 @@ export default function App() {
       Object.entries(textValues).forEach(([key, value]) => {
         const txtProp = vmi.text(key);
         if (txtProp) {
-          console.log(`Setting text ${key} to:`, value);
+          // console.log(`Setting text ${key} to:`, value);
           txtProp.value = value;
         }
       });

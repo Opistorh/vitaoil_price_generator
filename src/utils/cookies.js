@@ -10,6 +10,7 @@ export function loadTextValuesFromCookies() {
   const match = document.cookie.match(/(^| )textValues=([^;]+)/);
   try {
     const decoded = match ? decodeURIComponent(match[2]) : null;
+    // console.log(decoded)
     return decoded ? JSON.parse(decoded) : null;
   } catch {
     return null;

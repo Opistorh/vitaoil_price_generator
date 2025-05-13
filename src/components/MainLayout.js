@@ -32,7 +32,7 @@ export default function MainLayout({
                 id="arrowToggle"
                 checked={isArrowLeft}
                 onChange={(e) => {
-                  console.log('0. Checkbox arrow changed to:', e.target.checked);
+                  // console.log('0. Checkbox arrow changed to:', e.target.checked);
                   setIsArrowLeft(e.target.checked);
                 }}
               />
@@ -46,7 +46,7 @@ export default function MainLayout({
                 id="gasToggle"
                 checked={isGasOn}
                 onChange={(e) => {
-                  console.log('0. Checkbox gas changed to:', e.target.checked);
+                  // console.log('0. Checkbox gas changed to:', e.target.checked);
                   setIsGasOn(e.target.checked);
                 }}
               />
@@ -60,7 +60,7 @@ export default function MainLayout({
                 id="coffeeToggle"
                 checked={includeCoffee}
                 onChange={(e) => {
-                  console.log('0. Checkbox coffee changed to:', e.target.checked);
+                  // console.log('0. Checkbox coffee changed to:', e.target.checked);
                   setIncludeCoffee(e.target.checked);
                 }}
               />
@@ -81,9 +81,8 @@ export default function MainLayout({
         <div className="rive-canvas">
           <canvas 
             ref={canvasRef} 
-            width={600} 
-            height={400}
-            style={{ width: '100%', height: '100%' }}
+            width={320} 
+            height={373}
           />
         </div>
 
