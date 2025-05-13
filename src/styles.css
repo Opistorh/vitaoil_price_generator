@@ -24,8 +24,16 @@ body {
 }
 
 .rive-canvas {
-  height: 374px;
   width: 100%;
+  aspect-ratio: 1.5;
+  margin: 20px 0;
+  background-color: transparent;
+}
+
+.rive-canvas canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .columns {

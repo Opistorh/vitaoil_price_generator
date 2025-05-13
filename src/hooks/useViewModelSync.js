@@ -1,58 +1,116 @@
-// src/hooks/useViewModelSync.js
-
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 export default function useViewModelSync(rive, textValues, booleanInputs) {
-  // Sync text values
-  useEffect(() => {
-    if (!rive || !textValues || !rive.viewModel) return;
+  const boundRef = useRef(false);
 
-    Object.entries(textValues).forEach(([key, value]) => {
-      const input = rive.viewModel.inputs?.[key];
-      if (input) {
-        input.value = value;
+  // Инициализация View Model
+  useEffect(() => {
+    if (!rive || boundRef.current) {
+      console.log('Skip initialization:', { hasRive: !!rive, alreadyBound: boundRef.current });
+      return;
+    }
+
+    console.log('Initializing View Model...');
+    try {
+      // Получаем View Model по имени
+      const viewModel = rive.viewModelByName("View Model 1");
+      if (!viewModel) {
+        console.error('View Model "View Model 1" not found');
+        return;
       }
-    });
-  }, [rive, textValues]);
+      console.log('Found View Model:', viewModel);
 
-  // Sync boolean inputs
+      // Создаем экземпляр View Model
+      const viewModelInstance = viewModel.defaultInstance();
+      if (!viewModelInstance) {
+        console.error('Failed to create View Model instance');
+        return;
+      }
+      console.log('Created View Model instance:', viewModelInstance);
+
+      // Привязываем экземпляр
+      rive.bindViewModelInstance(viewModelInstance);
+      boundRef.current = true;
+      
+      console.log('View Model instance successfully bound');
+    } catch (error) {
+      console.error('Error initializing View Model:', error);
+    }
+  }, [rive]);
+
+  // Синхронизация булевых входов
   useEffect(() => {
-    console.log('4. useViewModelSync effect triggered with:', { rive, booleanInputs });
-    
-    if (!rive || !booleanInputs || !rive.viewModel) {
-      console.log('5. Early return due to:', { 
-        hasRive: !!rive, 
-        hasBooleanInputs: !!booleanInputs, 
-        hasViewModel: !!(rive && rive.viewModel)
+    if (!rive?.viewModelInstance || !booleanInputs) {
+      console.log('Skip boolean sync:', { 
+        hasInstance: !!rive?.viewModelInstance, 
+        hasInputs: !!booleanInputs 
       });
       return;
     }
 
-    const { arrows_left, coffee_price_show, gas_price_show } = booleanInputs;
-    
-    console.log('6. Extracted boolean inputs:', {
-      arrows_left,
-      coffee_price_show,
-      gas_price_show
-    });
-    
-    const inputs = rive.viewModel.inputs;
-    console.log('7. Available Rive inputs:', inputs);
+    console.log('Setting boolean inputs:', booleanInputs);
+    const vmi = rive.viewModelInstance;
 
-    if (inputs) {
-      console.log('8. Setting Rive input values...');
-      if (inputs.arrows_left) {
-        inputs.arrows_left.value = arrows_left;
-        console.log('- Set arrows_left to:', arrows_left);
+    try {
+      // Устанавливаем значения через Boolean properties
+      const arrowsLeft = vmi.boolean("arrows_left");
+      if (arrowsLeft) {
+        console.log('Setting arrows_left to:', booleanInputs.arrows_left);
+        arrowsLeft.value = booleanInputs.arrows_left;
       }
-      if (inputs.coffee_price_show) {
-        inputs.coffee_price_show.value = coffee_price_show;
-        console.log('- Set coffee_price_show to:', coffee_price_show);
+
+      const coffeePriceShow = vmi.boolean("coffee_price_show");
+      if (coffeePriceShow) {
+        console.log('Setting coffee_price_show to:', booleanInputs.coffee_price_show);
+        coffeePriceShow.value = booleanInputs.coffee_price_show;
       }
-      if (inputs.gas_price_show) {
-        inputs.gas_price_show.value = gas_price_show;
-        console.log('- Set gas_price_show to:', gas_price_show);
+
+      const gasPriceShow = vmi.boolean("gas_price_show");
+      if (gasPriceShow) {
+        console.log('Setting gas_price_show to:', booleanInputs.gas_price_show);
+        gasPriceShow.value = booleanInputs.gas_price_show;
       }
+
+      // Добавляем наблюдателей за изменениями
+      arrowsLeft?.on && arrowsLeft.on((event) => {
+        console.log('arrows_left changed:', event.data);
+      });
+
+      coffeePriceShow?.on && coffeePriceShow.on((event) => {
+        console.log('coffee_price_show changed:', event.data);
+      });
+
+      gasPriceShow?.on && gasPriceShow.on((event) => {
+        console.log('gas_price_show changed:', event.data);
+      });
+
+    } catch (error) {
+      console.error('Error syncing boolean inputs:', error);
     }
   }, [rive, booleanInputs]);
+
+  // Синхронизация текстовых значений
+  useEffect(() => {
+    if (!rive?.viewModelInstance || !textValues) {
+      console.log('Skip text sync:', { 
+        hasInstance: !!rive?.viewModelInstance, 
+        hasValues: !!textValues 
+      });
+      return;
+    }
+
+    try {
+      const vmi = rive.viewModelInstance;
+      
+      Object.entries(textValues).forEach(([key, value]) => {
+        const textProperty = vmi.text(key);
+        if (textProperty) {
+          console.log(`Setting text ${key} to:`, value);
+          textProperty.value = value;
+        }
+      });
+    } catch (error) {
+      console.error('Error syncing text values:', error);
+    }
+  }, [rive, textValues]);
 }

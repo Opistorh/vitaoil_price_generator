@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useRive, Layout, Fit, Alignment } from "@rive-app/react-canvas";
+import React, { useState, useEffect, useRef } from "react";
+import { Rive, Layout, Fit, Alignment } from "@rive-app/canvas";
 import { useRiveRecorder } from "./hooks/useRiveRecorder";
 import { addLog, updateLastLog } from "./logger";
 import { handleInputChange as handleInputChangeUtil } from "./utils/handleInputChange";
@@ -11,10 +11,11 @@ import {
 } from "./utils/cookies";
 import initialValues from "./initialValues";
 import MainLayout from "./components/MainLayout";
-import useViewModelSync from "./hooks/useViewModelSync";
 import "./styles.css";
 
 export default function App() {
+  const canvasRef = useRef(null);
+  const riveRef = useRef(null);
   const stateMachineName = "State Machine 1";
   const viewModelName = "View Model 1";
 
@@ -23,80 +24,160 @@ export default function App() {
   const handleUpdateLastLog = (newMessage) =>
     updateLastLog(setLogs, newMessage);
 
-  // Existing state variables
+  // State variables
   const [includeCoffee, setIncludeCoffee] = useState(true);
   const [isCoffeeOn, setCoffeeOn] = useState(true);
   const [isArrowLeft, setIsArrowLeft] = useState(false);
   const [isGasOn, setIsGasOn] = useState(true);
-
-  // New View Model boolean inputs
-  const [arrowsLeft, setArrowsLeft] = useState(false);
-  const [coffeePriceShow, setCoffeePriceShow] = useState(false);
-  const [gasPriceShow, setGasPriceShow] = useState(false);
-
-  const riveSrc = `animation_universal.riv`;
-
-  const { rive, RiveComponent } = useRive({
-    src: riveSrc,
-    stateMachines: stateMachineName,
-    viewModels: viewModelName,
-    autoplay: true,
-    layout: new Layout({ fit: Fit.Cover, alignment: Alignment.Center }),
-  });
-
   const [textValues, setTextValues] = useState(null);
 
+  // Initialize Rive
+  useEffect(() => {
+    riveRef.current = new Rive({
+      src: "/animation_universal.riv",
+      canvas: canvasRef.current,
+      stateMachines: stateMachineName,
+      autoplay: true,
+      layout: new Layout({
+        fit: Fit.Cover,
+        alignment: Alignment.Center
+      }),
+      autoBind: false,
+      onLoad: () => {
+        console.log('Rive loaded, initializing View Model...');
+        initializeViewModel();
+      },
+    });
+
+    return () => {
+      console.log('Cleaning up Rive...');
+      riveRef.current?.cleanup();
+    };
+  }, []);
+
+  // Initialize View Model
+  const initializeViewModel = () => {
+    const rive = riveRef.current;
+    if (!rive) {
+      console.error('Rive instance not available');
+      return;
+    }
+
+    try {
+      console.log('Getting View Model...');
+      const vm = rive.viewModelByName(viewModelName);
+      if (!vm) {
+        console.error(`View Model "${viewModelName}" not found`);
+        return;
+      }
+
+      console.log('Creating View Model instance...');
+      const vmi = vm.defaultInstance();
+      if (!vmi) {
+        console.error("Failed to create View Model instance");
+        return;
+      }
+
+      console.log('Binding View Model instance...');
+      rive.bindViewModelInstance(vmi);
+      riveRef.current.vmi = vmi;
+      console.log('View Model successfully initialized and bound');
+    } catch (error) {
+      console.error('Error in View Model initialization:', error);
+    }
+  };
+
+  // Load initial values
   useEffect(() => {
     const loadedText = loadTextValuesFromCookies() || initialValues;
     setTextValues(loadedText);
 
-    const { 
-      includeCoffee, 
-      isCoffeeOn, 
-      isArrowLeft, 
-      isGasOn,
-      arrows_left,
-      coffee_price_show,
-      gas_price_show
-    } = loadCheckboxesFromCookies();
-    
+    const { includeCoffee, isCoffeeOn, isArrowLeft, isGasOn } = loadCheckboxesFromCookies();
     setIncludeCoffee(includeCoffee);
     setCoffeeOn(isCoffeeOn);
     setIsArrowLeft(isArrowLeft);
     setIsGasOn(isGasOn);
-    setArrowsLeft(arrows_left);
-    setCoffeePriceShow(coffee_price_show);
-    setGasPriceShow(gas_price_show);
   }, []);
 
-  useViewModelSync(rive, textValues, {
-    arrows_left: arrowsLeft,
-    coffee_price_show: coffeePriceShow,
-    gas_price_show: gasPriceShow
-  });
-
-  // Sync View Model inputs with checkbox states
+  // Sync boolean properties with View Model
   useEffect(() => {
-    console.log('1. Checkbox states changed:', {
-      isArrowLeft,
-      isCoffeeOn,
-      isGasOn
-    });
-    
-    console.log('2. Setting View Model state variables...');
-    setArrowsLeft(isArrowLeft);
-    setCoffeePriceShow(isCoffeeOn);
-    setGasPriceShow(isGasOn);
+    const vmi = riveRef.current?.vmi;
+    if (!vmi) return;
 
-    console.log('3. Current View Model states after setting:', {
-      arrowsLeft,
-      coffeePriceShow,
-      gasPriceShow
-    });
+    console.log('Syncing boolean properties:', { isArrowLeft, isCoffeeOn, isGasOn });
+
+    try {
+      // Arrows
+      const arrowsProp = vmi.boolean("arrows_left");
+      if (arrowsProp) {
+        console.log('Setting arrows_left to:', isArrowLeft);
+        arrowsProp.value = isArrowLeft;
+      }
+
+      // Coffee
+      const coffeeProp = vmi.boolean("coffee_price_show");
+      if (coffeeProp) {
+        console.log('Setting coffee_price_show to:', isCoffeeOn);
+        coffeeProp.value = isCoffeeOn;
+      }
+
+      // Gas
+      const gasProp = vmi.boolean("gas_price_show");
+      if (gasProp) {
+        console.log('Setting gas_price_show to:', isGasOn);
+        gasProp.value = isGasOn;
+      }
+    } catch (error) {
+      console.error('Error syncing boolean properties:', error);
+    }
   }, [isArrowLeft, isCoffeeOn, isGasOn]);
 
+  // Sync text values with View Model
+  useEffect(() => {
+    const vmi = riveRef.current?.vmi;
+    if (!vmi || !textValues) return;
+
+    try {
+      Object.entries(textValues).forEach(([key, value]) => {
+        const txtProp = vmi.text(key);
+        if (txtProp) {
+          console.log(`Setting text ${key} to:`, value);
+          txtProp.value = value;
+        }
+      });
+    } catch (error) {
+      console.error('Error syncing text values:', error);
+    }
+  }, [textValues]);
+
+  // Set up observers (optional)
+  useEffect(() => {
+    const vmi = riveRef.current?.vmi;
+    if (!vmi) return;
+
+    const observers = [
+      { name: "arrows_left", handler: (e) => console.log("arrows_left changed →", e.data) },
+      { name: "coffee_price_show", handler: (e) => console.log("coffee_price_show changed →", e.data) },
+      { name: "gas_price_show", handler: (e) => console.log("gas_price_show changed →", e.data) }
+    ];
+
+    // Set up observers
+    observers.forEach(({ name, handler }) => {
+      const prop = vmi.boolean(name);
+      prop?.on(handler);
+    });
+
+    // Cleanup observers
+    return () => {
+      observers.forEach(({ name, handler }) => {
+        const prop = vmi.boolean(name);
+        prop?.off(handler);
+      });
+    };
+  }, []);
+
   const handleInputChange = (e, variableName) =>
-    handleInputChangeUtil({ e, variableName, setTextValues, rive });
+    handleInputChangeUtil({ e, variableName, setTextValues, rive: riveRef.current });
 
   const {
     isReady: isFFmpegReady,
@@ -114,21 +195,19 @@ export default function App() {
         includeCoffee,
         isCoffeeOn,
         isArrowLeft,
-        isGasOn,
-        arrows_left: arrowsLeft,
-        coffee_price_show: coffeePriceShow,
-        gas_price_show: gasPriceShow
+        isGasOn
       });
-      recordAndDownload({ rive, stateMachineName, includeCoffee, isCoffeeOn });
+      recordAndDownload({ 
+        rive: riveRef.current, 
+        stateMachineName, 
+        includeCoffee
+      });
     }
   };
 
   return (
     <MainLayout
-      rive={rive}
-      RiveComponent={RiveComponent}
-      riveSrc={riveSrc}
-      stateMachineName={stateMachineName}
+      canvasRef={canvasRef}
       textValues={textValues}
       handleInputChange={handleInputChange}
       isArrowLeft={isArrowLeft}

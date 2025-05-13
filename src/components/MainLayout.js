@@ -5,10 +5,7 @@ import { leftFields, rightFields, coffeeField } from "../fieldConfig";
 import { parseLog } from "../logger";
 
 export default function MainLayout({
-  rive,
-  RiveComponent,
-  riveSrc,
-  stateMachineName,
+  canvasRef,
   textValues,
   handleInputChange,
   isArrowLeft,
@@ -82,7 +79,12 @@ export default function MainLayout({
         )}
 
         <div className="rive-canvas">
-          <RiveComponent key={riveSrc} />
+          <canvas 
+            ref={canvasRef} 
+            width={600} 
+            height={400}
+            style={{ width: '100%', height: '100%' }}
+          />
         </div>
 
         {!isProcessing && textValues && (
@@ -161,7 +163,7 @@ export default function MainLayout({
             <div className="log-container">
               <button
                 className="download-button"
-                onClick={() => recordAndDownload({ rive, stateMachineName })}
+                onClick={() => recordAndDownload({ stateMachineName: "State Machine 1" })}
                 disabled={!isFFmpegReady}
               >
                 Скачать видео
