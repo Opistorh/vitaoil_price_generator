@@ -21,6 +21,8 @@ export default function MainLayout({
   logs,
   includeCoffee,
   setIncludeCoffee,
+  isCoffeeOn,
+  setCoffeeOn,
 }) {
   return (
     <div className="App" translate="no">
@@ -57,6 +59,15 @@ export default function MainLayout({
                 onChange={(e) => setIncludeCoffee(e.target.checked)}
               />
               <label htmlFor="coffeeToggle">Добавить видео про кофе</label>
+            </div>
+            <div className="toggle">
+              <input
+                type="checkbox"
+                id="coffeeOnToggle"
+                checked={isCoffeeOn}
+                onChange={(e) => setCoffeeOn(e.target.checked)}
+              />
+              <label htmlFor="coffeeOnToggle">Включить кофе</label>
             </div>
           </div>
         )}
@@ -107,7 +118,7 @@ export default function MainLayout({
             </div>
 
             <div style={{ marginTop: "1rem" }}>
-              <div className="field">
+              <div className={`field ${!isCoffeeOn ? "hidden" : ""}`}>
                 <div className="label">{coffeeField}:</div>
                 <input
                   type="text"

@@ -19,10 +19,11 @@ export function loadTextValuesFromCookies() {
 // ⬇️ Новые функции для чекбоксов:
 export function saveCheckboxesToCookies({
   includeCoffee,
+  isCoffeeOn,
   isArrowLeft,
   isGasOn,
 }) {
-  const state = { includeCoffee, isArrowLeft, isGasOn };
+  const state = { includeCoffee, isCoffeeOn, isArrowLeft, isGasOn };
   document.cookie = `checkboxStates=${JSON.stringify(state)}; path=/`;
 }
 
@@ -33,12 +34,14 @@ export function loadCheckboxesFromCookies() {
     const parsed = decoded ? JSON.parse(decoded) : {};
     return {
       includeCoffee: parsed.includeCoffee ?? true,
+      isCoffeeOn: parsed.isCoffeeOn ?? true,
       isArrowLeft: parsed.isArrowLeft ?? false,
       isGasOn: parsed.isGasOn ?? true,
     };
   } catch {
     return {
       includeCoffee: true,
+      isCoffeeOn: true,
       isArrowLeft: false,
       isGasOn: true,
     };

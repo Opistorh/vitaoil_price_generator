@@ -17,6 +17,7 @@ import "./styles.css";
 
 export default function App() {
   const stateMachineName = "State Machine 1";
+  //const viewModelName = "View Model 1";
 
   const [logs, setLogs] = useState([]);
   const handleAddLog = (message) => addLog(setLogs, message);
@@ -24,12 +25,16 @@ export default function App() {
     updateLastLog(setLogs, newMessage);
 
   const [includeCoffee, setIncludeCoffee] = useState(true);
-
+  const [isCoffeeOn, setCoffeeOn] = useState(true);
   const [isArrowLeft, setIsArrowLeft] = useState(false);
   const [isGasOn, setIsGasOn] = useState(true);
-  const riveSrc = `arr_${isArrowLeft ? "left" : "right"}_gas_${
-    isGasOn ? "on" : "off"
-  }.riv`;
+
+  //const riveSrc = `arr_${isArrowLeft ? "left" : "right"}_gas_${
+  //  isGasOn ? "on" : "off"
+  //}.riv`;
+  
+  const riveSrc = `animation_universal.riv`;
+ 
 
   const { rive, RiveComponent } = useRive({
     src: riveSrc,
@@ -45,8 +50,9 @@ export default function App() {
     const loadedText = loadTextValuesFromCookies() || initialValues;
     setTextValues(loadedText);
 
-    const { includeCoffee, isArrowLeft, isGasOn } = loadCheckboxesFromCookies();
+    const { includeCoffee, isCoffeeOn, isArrowLeft, isGasOn } = loadCheckboxesFromCookies();
     setIncludeCoffee(includeCoffee);
+    setCoffeeOn(isCoffeeOn);
     setIsArrowLeft(isArrowLeft);
     setIsGasOn(isGasOn);
   }, []);
@@ -75,8 +81,8 @@ export default function App() {
   const handleDownload = () => {
     if (textValues) {
       saveTextValuesToCookies(textValues);
-      saveCheckboxesToCookies({ includeCoffee, isArrowLeft, isGasOn });
-      recordAndDownload({ rive, stateMachineName, includeCoffee });
+      saveCheckboxesToCookies({ includeCoffee, isCoffeeOn, isArrowLeft, isGasOn });
+      recordAndDownload({ rive, stateMachineName, includeCoffee, isCoffeeOn });
     }
   };
 
@@ -98,6 +104,8 @@ export default function App() {
       logs={logs}
       includeCoffee={includeCoffee}
       setIncludeCoffee={setIncludeCoffee}
+      isCoffeeOn={isCoffeeOn}
+      setCoffeeOn={setCoffeeOn}
     />
   );
 }
