@@ -1,5 +1,3 @@
-// src\App.js
-
 import React, { useState, useEffect } from "react";
 import { useRive, Layout, Fit, Alignment } from "@rive-app/react-canvas";
 import { useRiveRecorder } from "./hooks/useRiveRecorder";
@@ -25,10 +23,16 @@ export default function App() {
   const handleUpdateLastLog = (newMessage) =>
     updateLastLog(setLogs, newMessage);
 
+  // Existing state variables
   const [includeCoffee, setIncludeCoffee] = useState(true);
   const [isCoffeeOn, setCoffeeOn] = useState(true);
   const [isArrowLeft, setIsArrowLeft] = useState(false);
   const [isGasOn, setIsGasOn] = useState(true);
+
+  // New View Model boolean inputs
+  const [arrowsLeft, setArrowsLeft] = useState(false);
+  const [coffeePriceShow, setCoffeePriceShow] = useState(false);
+  const [gasPriceShow, setGasPriceShow] = useState(false);
 
   const riveSrc = `animation_universal.riv`;
 
@@ -46,15 +50,43 @@ export default function App() {
     const loadedText = loadTextValuesFromCookies() || initialValues;
     setTextValues(loadedText);
 
-    const { includeCoffee, isCoffeeOn, isArrowLeft, isGasOn } =
-      loadCheckboxesFromCookies();
+    const { 
+      includeCoffee, 
+      isCoffeeOn, 
+      isArrowLeft, 
+      isGasOn,
+      arrows_left,
+      coffee_price_show,
+      gas_price_show
+    } = loadCheckboxesFromCookies();
+    
     setIncludeCoffee(includeCoffee);
     setCoffeeOn(isCoffeeOn);
     setIsArrowLeft(isArrowLeft);
     setIsGasOn(isGasOn);
+    setArrowsLeft(arrows_left);
+    setCoffeePriceShow(coffee_price_show);
+    setGasPriceShow(gas_price_show);
   }, []);
 
-  useViewModelSync(rive, textValues);
+  useViewModelSync(rive, textValues, {
+    arrows_left: arrowsLeft,
+    coffee_price_show: coffeePriceShow,
+    gas_price_show: gasPriceShow
+  });
+
+  // Sync View Model inputs with checkbox states
+  useEffect(() => {
+    console.log('Checkbox states changed:', {
+      isArrowLeft,
+      isCoffeeOn,
+      isGasOn
+    });
+    
+    setArrowsLeft(isArrowLeft);
+    setCoffeePriceShow(isCoffeeOn);
+    setGasPriceShow(isGasOn);
+  }, [isArrowLeft, isCoffeeOn, isGasOn]);
 
   const handleInputChange = (e, variableName) =>
     handleInputChangeUtil({ e, variableName, setTextValues, rive });
@@ -76,6 +108,9 @@ export default function App() {
         isCoffeeOn,
         isArrowLeft,
         isGasOn,
+        arrows_left: arrowsLeft,
+        coffee_price_show: coffeePriceShow,
+        gas_price_show: gasPriceShow
       });
       recordAndDownload({ rive, stateMachineName, includeCoffee, isCoffeeOn });
     }

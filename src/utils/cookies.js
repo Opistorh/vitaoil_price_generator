@@ -37,6 +37,9 @@ export function loadCheckboxesFromCookies() {
       isCoffeeOn: parsed.isCoffeeOn ?? true,
       isArrowLeft: parsed.isArrowLeft ?? false,
       isGasOn: parsed.isGasOn ?? true,
+      arrows_left: parsed.arrows_left ?? false,
+      coffee_price_show: parsed.coffee_price_show ?? false,
+      gas_price_show: parsed.gas_price_show ?? false,
     };
   } catch {
     return {
@@ -44,6 +47,9 @@ export function loadCheckboxesFromCookies() {
       isCoffeeOn: true,
       isArrowLeft: false,
       isGasOn: true,
+      arrows_left: false,
+      coffee_price_show: false,
+      gas_price_show: false,
     };
   }
 }
