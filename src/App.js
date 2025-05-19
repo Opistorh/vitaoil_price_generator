@@ -242,11 +242,13 @@ export default function App() {
         isCoffeeOn,
         isArrowLeft,
         isGasOn
-      });
-      recordAndDownload({ 
+      });      recordAndDownload({ 
         rive: riveRef.current, 
         stateMachineName, 
-        includeCoffee
+        includeCoffee,
+        isCoffeeOn,
+        isGasOn,
+        isArrowLeft,
       });
     }
   };

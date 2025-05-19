@@ -29,6 +29,9 @@ export function useRiveRecorder({ addLog, updateLastLog }) {
     rive,
     stateMachineName,
     includeCoffee,
+    isCoffeeOn,
+    isGasOn,
+    isArrowLeft,
   }) => {
     if (!rive) return alert("Rive не инициализирован!");
     if (!isReady) return alert("FFmpeg ещё не готов!");
@@ -46,6 +49,9 @@ export function useRiveRecorder({ addLog, updateLastLog }) {
         addLog,
         updateLastLog,
         ffmpeg,
+        isCoffeeOn,
+        isGasOn,
+        isArrowLeft,
       });
       await buildFinalVideo({
         ffmpeg,
