@@ -32,26 +32,48 @@ export async function buildFinalVideo({
   fetchFile,
   includeCoffee,
 }) {
-  const { width, height } = resolutionRef.current || {};
-  if (!width || !height)
-    throw new Error("Не удалось определить разрешение Rive-видео");
+  const TARGET_HEIGHT = 374; // Фиксированная высота для обоих видео
+  const TARGET_WIDTH = 320;  // Фиксированная ширина для обоих видео
 
   if (includeCoffee) {
-    addLog("Шаг 5/6: Склейка с coffee.mp4...");
-    const coffeeData = await fetchFile("/coffee.mp4");
-    await ffmpeg.writeFile("coffee.mp4", coffeeData);
-
+    addLog("Шаг 5/6: Подготовка и склейка с coffee.mp4...");
+    
+    // Сначала масштабируем main.mp4 до нужного размера
     await ffmpeg.exec([
       "-i",
       "main.mp4",
-      "-r",
-      "30",
+      "-vf",
+      `scale=${TARGET_WIDTH}:${TARGET_HEIGHT}`,
+      "-c:v",
+      "libx264",
+      "-pix_fmt",
+      "yuv420p",
+      "main_scaled.mp4"
+    ]);
+
+    // Подготавливаем и масштабируем coffee.mp4
+    const coffeeData = await fetchFile("/coffee.mp4");
+    await ffmpeg.writeFile("coffee.mp4", coffeeData);
+    await ffmpeg.exec([
       "-i",
       "coffee.mp4",
+      "-vf",
+      `scale=${TARGET_WIDTH}:${TARGET_HEIGHT}:force_original_aspect_ratio=increase,crop=${TARGET_WIDTH}:${TARGET_HEIGHT}`,
+      "-c:v",
+      "libx264",
+      "-pix_fmt",
+      "yuv420p",
+      "coffee_scaled.mp4"
+    ]);
+
+    // Склеиваем масштабированные видео
+    await ffmpeg.exec([
+      "-i",
+      "main_scaled.mp4",
+      "-i",
+      "coffee_scaled.mp4",
       "-filter_complex",
-      `[0:v]fps=30,format=yuv420p[v0];` +
-        `[1:v]fps=30,scale=${width}:${height}:force_original_aspect_ratio=increase,crop=${width}:${height},format=yuv420p[v1];` +
-        `[v0][v1]concat=n=2:v=1:a=0:unsafe=1[out]`,
+      "[0:v][1:v]concat=n=2:v=1:a=0[out]",
       "-map",
       "[out]",
       "-c:v",
@@ -60,14 +82,25 @@ export async function buildFinalVideo({
       "yuv420p",
       "-t",
       "19",
-      "output.mp4",
+      "output.mp4"
     ]);
 
     updateLastLog("Шаг 5/6: Склейка завершена.");
   } else {
     addLog("Шаг 5/6: Копирование main.mp4 без добавления кофе...");
-    await ffmpeg.rename("main.mp4", "output.mp4");
-    updateLastLog("Шаг 5/6: Пропущена склейка, используем только Rive-видео.");
+    // Даже без склейки масштабируем видео до нужного размера
+    await ffmpeg.exec([
+      "-i",
+      "main.mp4",
+      "-vf",
+      `scale=${TARGET_WIDTH}:${TARGET_HEIGHT}`,
+      "-c:v",
+      "libx264",
+      "-pix_fmt",
+      "yuv420p",
+      "output.mp4"
+    ]);
+    updateLastLog("Шаг 5/6: Финальная обработка видео завершена.");
   }
 
   addLog("Шаг 6/6: Скачивание результата...");

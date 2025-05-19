@@ -1,3 +1,4 @@
+//src\fieldConfig.js
 // Конфигурация полей для ввода значений
 
 export const leftFields = [

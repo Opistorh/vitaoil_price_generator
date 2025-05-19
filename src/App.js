@@ -1,3 +1,5 @@
+//src\App.js
+
 import React, { useState, useEffect, useRef } from "react";
 import { Rive, Layout, Fit, Alignment } from "@rive-app/canvas";
 import { useRiveRecorder } from "./hooks/useRiveRecorder";
@@ -190,7 +192,7 @@ export default function App() {
         }
       });
     } catch (error) {
-      console.error('Error syncing text values:', error);
+      //console.error('Error syncing text values:', error);
     }
   }, [textValues]);
 
