@@ -11,9 +11,36 @@ export async function recordFrames({
   updateLastLog,
   ffmpeg,
 }) {
-  addLog("Шаг 1/6: Запуск анимации...");
+  addLog("Шаг 1/6: Подготовка к записи анимации...");
+
+  // Получаем и сохраняем текущие значения View Model
+  const vmi = rive.vmi;
+  if (!vmi) {
+    throw new Error("View Model не инициализирован!");
+  }
+
+  // Сохраняем текущие значения
+  const currentStates = {};
+  ["arrows_left", "coffee_price_show", "gas_price_show"].forEach(propName => {
+    const prop = vmi.boolean(propName);
+    if (prop) {
+      currentStates[propName] = prop.value;
+    }
+  });
+
+  // Перезапускаем анимацию
+  addLog("Шаг 1/6: Перезапуск анимации...");
   rive.stop(stateMachineName);
   rive.play(stateMachineName);
+
+  // Восстанавливаем значения в View Model
+  Object.entries(currentStates).forEach(([propName, value]) => {
+    const prop = vmi.boolean(propName);
+    if (prop) {
+      prop.value = value;
+      console.log(`Восстановление ${propName}:`, value);
+    }
+  });
 
   const canvas = document.querySelector("canvas");
   if (!canvas) throw new Error("Canvas с Rive не найден!");
@@ -83,6 +110,8 @@ export async function recordFrames({
     "1",
     "-i",
     "frame_%04d.png",
+    "-vf",
+    "scale=320:374",
     "-c:v",
     "libx264",
     "-pix_fmt",
