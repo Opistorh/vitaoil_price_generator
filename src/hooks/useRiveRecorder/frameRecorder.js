@@ -83,10 +83,9 @@ export async function recordFrames({
   const canvas = document.querySelector("canvas");
   if (!canvas) throw new Error("Canvas с Rive не найден!");
 
-  const frames = [];
-  const fps = 30;
+  const frames = [];  const fps = 30;
   const interval = 1000 / fps;
-  const maxDuration = 14000;
+  const maxDuration = 16000;
   const totalFrames = Math.floor((maxDuration / 1000) * fps);
   let elapsed = 0;
   let progressPercent = 0;
