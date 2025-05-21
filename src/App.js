@@ -100,7 +100,7 @@ export default function App() {
       setTextValues(loadedText);
       
       Object.entries(loadedText).forEach(([key, value]) => {
-        console.log(`Initial sync: Setting text ${key} to:`, value);
+        // console.log(`Initial sync: Setting text ${key} to:`, value);
         riveRef.current?.setTextRunValue(key, value);
       });
 
@@ -127,7 +127,7 @@ export default function App() {
         gasProp.value = isGasOn;
       }
 
-      console.log('Initial sync complete:', { loadedText, includeCoffee, isCoffeeOn, isArrowLeft, isGasOn });
+      // console.log('Initial sync complete:', { loadedText, includeCoffee, isCoffeeOn, isArrowLeft, isGasOn });
     } catch (error) {
       console.error('Error during initial sync:', error);
     }

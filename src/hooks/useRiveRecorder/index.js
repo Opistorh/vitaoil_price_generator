@@ -14,15 +14,23 @@ export function useRiveRecorder({ addLog, updateLastLog }) {
   const [isReady, setIsReady] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const outputResolutionRef = useRef(null);
-
   useEffect(() => {
-    (async () => {
+    // console.log("[useRiveRecorder] useEffect triggered");
+    const initializeFFmpeg = async () => {
+      if (ffmpegRef.current) {
+        // FFmpeg уже инициализирован, просто обновляем состояние
+        setIsReady(true);
+        return;
+      }
+
       const ffmpeg = await initFFmpeg(addLog);
       handleFFmpegLogs(ffmpeg, addLog, outputResolutionRef);
       ffmpegRef.current = ffmpeg;
       setIsReady(true);
       addLog("FFmpeg готов к работе.");
-    })();
+    };
+
+    initializeFFmpeg();
   }, []);
 
   const recordAndDownload = async ({

@@ -17,14 +17,14 @@ export async function recordFrames({
   addLog("Шаг 1/6: Подготовка к записи анимации...");
 
   // Логируем входные параметры
-  console.log('Параметры для записи:', { isCoffeeOn, isGasOn, isArrowLeft });
+  // console.log('Параметры для записи:', { isCoffeeOn, isGasOn, isArrowLeft });
 
   // Перезапускаем анимацию
   rive.stop(stateMachineName);
   rive.play(stateMachineName);
 
   // Пересоздаём и привязываем fresh ViewModel к новому SM-инстансу
-  console.log('Пересоздание View Model...');
+  // console.log('Пересоздание View Model...');
   const vm = rive.viewModelByName("View Model 1");
   if (!vm) throw new Error("ViewModel не найдена");
   
@@ -32,17 +32,17 @@ export async function recordFrames({
   rive.bindViewModelInstance(newVmi);
   rive.vmi = newVmi;
 
-  console.log('View Model пересоздана и привязана');
+  // console.log('View Model пересоздана и привязана');
 
   // Сразу восстанавливаем состояния в новом инстансе
   if (rive.vmi) {
-    console.log('Состояние перед установкой значений в новый инстанс:');
+    // console.log('Состояние перед установкой значений в новый инстанс:');
     const beforeState = {
       coffee_price_show: rive.vmi.boolean("coffee_price_show")?.value,
       gas_price_show: rive.vmi.boolean("gas_price_show")?.value,
       arrows_left: rive.vmi.boolean("arrows_left")?.value,
     };
-    console.log(beforeState);
+    // console.log(beforeState);
 
     const coffee = rive.vmi.boolean("coffee_price_show");
     const gas    = rive.vmi.boolean("gas_price_show");
@@ -50,42 +50,43 @@ export async function recordFrames({
 
     if (coffee) {
       coffee.value = isCoffeeOn;
-      console.log('Установлено coffee_price_show в новом инстансе:', isCoffeeOn);
+      // console.log('Установлено coffee_price_show в новом инстансе:', isCoffeeOn);
     } else {
-      console.warn('Не найдено свойство coffee_price_show');
+      // console.warn('Не найдено свойство coffee_price_show');
     }
 
     if (gas) {
       gas.value = isGasOn;
-      console.log('Установлено gas_price_show в новом инстансе:', isGasOn);
+      // console.log('Установлено gas_price_show в новом инстансе:', isGasOn);
     } else {
-      console.warn('Не найдено свойство gas_price_show');
+      // console.warn('Не найдено свойство gas_price_show');
     }
 
     if (arrows) {
       arrows.value = isArrowLeft;
-      console.log('Установлено arrows_left в новом инстансе:', isArrowLeft);
+      // console.log('Установлено arrows_left в новом инстансе:', isArrowLeft);
     } else {
-      console.warn('Не найдено свойство arrows_left');
+      // console.warn('Не найдено свойство arrows_left');
     }
 
-    console.log('Состояние после установки значений в новый инстанс:');
+    // console.log('Состояние после установки значений в новый инстанс:');
     const afterState = {
       coffee_price_show: rive.vmi.boolean("coffee_price_show")?.value,
       gas_price_show: rive.vmi.boolean("gas_price_show")?.value,
       arrows_left: rive.vmi.boolean("arrows_left")?.value,
     };
-    console.log(afterState);
+    // console.log(afterState);
   } else {
-    console.error('Новый View Model Instance не привязался!');
+    // console.error('Новый View Model Instance не привязался!');
   }
 
   const canvas = document.querySelector("canvas");
-  if (!canvas) throw new Error("Canvas с Rive не найден!");
+  // if (!canvas) throw new Error("Canvas с Rive не найден!");
 
-  const frames = [];  const fps = 30;
+  const frames = [];  
+  const fps = 30;
   const interval = 1000 / fps;
-  const maxDuration = 16000;
+  const maxDuration = 21000;
   const totalFrames = Math.floor((maxDuration / 1000) * fps);
   let elapsed = 0;
   let progressPercent = 0;
@@ -126,21 +127,24 @@ export async function recordFrames({
   }
 
   updateLastLog("Шаг 3/6: Подготовка кадров — завершена.");
-
   addLog("Шаг 4/6: Сборка основного видео...");
-  let buildCount = 0;
-  const TOTAL_PACKETS = 180;
+  
+  // Используем количество кадров для более точного отслеживания прогресса
+  const expectedFrames = frames.length;
+  let processedFrames = 0;
 
-  ffmpeg.on("progress", () => {
-    buildCount++;
-    const percent = Math.min(
-      100,
-      Math.round((buildCount / TOTAL_PACKETS) * 100)
-    );
-    updateLastLog(`Шаг 4/6: Сборка видео: ${getProgressBar(percent)}`);
+  ffmpeg.on("log", ({ message }) => {
+    // Ищем сообщение о текущем кадре в формате frame=xxx
+    const frameMatch = message.match(/frame=\s*(\d+)/);
+    if (frameMatch) {
+      processedFrames = parseInt(frameMatch[1], 10);
+      const percent = Math.min(100, Math.round((processedFrames / expectedFrames) * 100));
+      updateLastLog(`Шаг 4/6: Сборка видео: ${getProgressBar(percent)}`);
+    }
   });
-
   await ffmpeg.exec([
+    "-progress", "1",
+    "-v", "info",
     "-framerate",
     "30",
     "-start_number",
@@ -151,8 +155,16 @@ export async function recordFrames({
     "scale=320:374",
     "-c:v",
     "libx264",
+    "-preset",
+    "ultrafast",
+    "-tune",
+    "zerolatency",
+    "-crf",
+    "23",
     "-pix_fmt",
     "yuv420p",
+    "-movflags",
+    "+faststart",
     "main.mp4",
   ]);
 
