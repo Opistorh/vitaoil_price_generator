@@ -267,7 +267,7 @@ export default function App() {
   };
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
       <MainLayout
         canvasRef={canvasRef}
         textValues={textValues}
