@@ -13,7 +13,8 @@ import {
 } from "./utils/cookies";
 import initialValues from "./initialValues";
 import MainLayout from "./components/MainLayout";
-import "./styles.css";
+import { ThemeProvider } from "./components/ThemeProvider";
+import "./index.css";
 
 export default function App() {
   const canvasRef = useRef(null);
@@ -30,9 +31,8 @@ export default function App() {
   const [includeCoffee, setIncludeCoffee] = useState(true);
   const [isCoffeeOn, setCoffeeOn] = useState(true);
   const [isArrowLeft, setIsArrowLeft] = useState(false);
-  const [isGasOn, setIsGasOn] = useState(true);
-  const [textValues, setTextValues] = useState(null);
-
+  const [isGasOn, setIsGasOn] = useState(true);  const [textValues, setTextValues] = useState(initialValues);
+  
   // Initialize Rive
   useEffect(() => {
     riveRef.current = new Rive({
@@ -41,9 +41,11 @@ export default function App() {
       stateMachines: stateMachineName,
       autoplay: true,
       layout: new Layout({
-        fit: Fit.Cover,
-        alignment: Alignment.Center
+        fit: Fit.Fill,
+        alignment: Alignment.Center,
       }),
+      useOffscreenRenderer: true,
+      renderBufferSize: { width: 320, height: 374 },
       autoBind: false,
       onLoad: () => {
         //console.log('Rive loaded, initializing View Model...');
@@ -88,7 +90,6 @@ export default function App() {
       console.error('Error in View Model initialization:', error);
     }
   };
-
   // Initial synchronization with Rive
   useEffect(() => {
     const vmi = riveRef.current?.vmi;
@@ -97,11 +98,18 @@ export default function App() {
     try {
       // Load and sync text values
       const loadedText = loadTextValuesFromCookies() || initialValues;
-      setTextValues(loadedText);
+      setTextValues(loadedText);      
       
-      Object.entries(loadedText).forEach(([key, value]) => {
-        // console.log(`Initial sync: Setting text ${key} to:`, value);
-        riveRef.current?.setTextRunValue(key, value);
+      // Отфильтруем поля, которые точно есть в Rive
+      const riveFields = ["95 PREM", "92 ECO", "92 EURO", "DIESEL", "GAS",
+                         "95 PREM DISCOUNT", "92 ECO DISCOUNT", "92 EURO DISCOUNT",
+                         "DIESEL DISCOUNT", "GAS DISCOUNT", "COFFEE"];
+
+      Object.entries(loadedText)
+        .filter(([key]) => riveFields.includes(key))
+        .forEach(([key, value]) => {
+          // console.log(`Initial sync: Setting text ${key} to:`, value);
+          riveRef.current?.setTextRunValue(key, value);
       });
 
       // Load and sync checkbox values
@@ -220,10 +228,15 @@ export default function App() {
         prop?.off(handler);
       });
     };
-  }, []);
-
-  const handleInputChange = (e, variableName) =>
-    handleInputChangeUtil({ e, variableName, setTextValues, rive: riveRef.current });
+  }, []);  // Обработчик изменения значений полей
+  const handleInputChangePage = ({ event, variableName }) => {
+    handleInputChangeUtil({
+      event,
+      variableName,
+      setTextValues,
+      rive: riveRef.current
+    });
+  };
 
   const {
     isReady: isFFmpegReady,
@@ -254,22 +267,24 @@ export default function App() {
   };
 
   return (
-    <MainLayout
-      canvasRef={canvasRef}
-      textValues={textValues}
-      handleInputChange={handleInputChange}
-      isArrowLeft={isArrowLeft}
-      setIsArrowLeft={setIsArrowLeft}
-      isGasOn={isGasOn}
-      setIsGasOn={setIsGasOn}
-      isProcessing={isProcessing}
-      isFFmpegReady={isFFmpegReady}
-      recordAndDownload={handleDownload}
-      logs={logs}
-      includeCoffee={includeCoffee}
-      setIncludeCoffee={setIncludeCoffee}
-      isCoffeeOn={isCoffeeOn}
-      setCoffeeOn={setCoffeeOn}
-    />
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <MainLayout
+        canvasRef={canvasRef}
+        textValues={textValues}
+        handleInputChange={handleInputChangePage}
+        isArrowLeft={isArrowLeft}
+        setIsArrowLeft={setIsArrowLeft}
+        isGasOn={isGasOn}
+        setIsGasOn={setIsGasOn}
+        isProcessing={isProcessing}
+        isFFmpegReady={isFFmpegReady}
+        recordAndDownload={handleDownload}
+        logs={logs}
+        includeCoffee={includeCoffee}
+        setIncludeCoffee={setIncludeCoffee}
+        isCoffeeOn={isCoffeeOn}
+        setCoffeeOn={setCoffeeOn}
+      />
+    </ThemeProvider>
   );
 }

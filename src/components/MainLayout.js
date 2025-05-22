@@ -3,10 +3,14 @@
 import React from "react";
 import { leftFields, rightFields, coffeeField } from "../fieldConfig";
 import { parseLog } from "../logger";
+import { Button } from "./ui/button";
+import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
+import { Switch } from "./ui/switch";
+import { cn } from "../utils/cn";
 
 export default function MainLayout({
   canvasRef,
-  textValues,
+  textValues = {}, // Добавляем значение по умолчанию
   handleInputChange,
   isArrowLeft,
   setIsArrowLeft,
@@ -21,165 +25,204 @@ export default function MainLayout({
   isCoffeeOn,
   setCoffeeOn,
 }) {
+  // Функция для безопасного получения значения поля
+  const getFieldValue = (fieldId) => {
+    return textValues?.[fieldId] || "";
+  };  // Обработчик изменения значения поля
+  const onInputChange = (e, fieldId) => {
+    handleInputChange({
+      event: e,
+      variableName: fieldId,
+    });
+  };
+
+  // Функция для создания элемента Switch с меткой
+  const SwitchWithLabel = ({ checked, onCheckedChange, label, className }) => (
+    <div className={cn("flex items-center gap-2", className)}>
+      <Switch checked={checked} onCheckedChange={onCheckedChange} />
+      <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+        {label}
+      </label>
+    </div>
+  );
+
   return (
-    <div className="App" translate="no">
-      <div className="container">
+    <div className="min-h-screen bg-background p-4" translate="no">
+      <div className="mx-auto w-full max-w-[360px] space-y-6">        {/* Canvas */}
+        <div className="relative w-full max-w-[320px] mx-auto">
+          <div className="aspect-[640/748] w-full">
+            <canvas
+              ref={canvasRef}
+              width={640}
+              height={748}
+              className="absolute inset-0 w-full h-full rounded-lg border bg-white shadow-sm"
+            />
+          </div>
+        </div>
+
         {!isProcessing && (
-          <div>
-            <div className="toggle">
-              <input
-                type="checkbox"
-                id="arrowToggle"
-                checked={isArrowLeft}
-                onChange={(e) => {
-                  // console.log('0. Checkbox arrow changed to:', e.target.checked);
-                  setIsArrowLeft(e.target.checked);
-                }}
-              />
-              <label htmlFor="arrowToggle">
-                Стрелки влево (без галочки – вправо)
-              </label>
-            </div>
-            <div className="toggle">
-              <input
-                type="checkbox"
-                id="gasToggle"
-                checked={isGasOn}
-                onChange={(e) => {
-                  // console.log('0. Checkbox gas changed to:', e.target.checked);
-                  setIsGasOn(e.target.checked);
-                }}
-              />
-              <label htmlFor="gasToggle">
-                GAS включён (без галочки – выключен)
-              </label>
-            </div>
-            <div className="toggle">
-              <input
-                type="checkbox"
-                id="coffeeToggle"
-                checked={includeCoffee}
-                onChange={(e) => {
-                  // console.log('0. Checkbox coffee changed to:', e.target.checked);
-                  setIncludeCoffee(e.target.checked);
-                }}
-              />
-              <label htmlFor="coffeeToggle">Добавить видео про кофе</label>
-            </div>
-            <div className="toggle">
-              <input
-                type="checkbox"
-                id="coffeeOnToggle"
-                checked={isCoffeeOn}
-                onChange={(e) => setCoffeeOn(e.target.checked)}
-              />
-              <label htmlFor="coffeeOnToggle">Включить кофе</label>
-            </div>
-          </div>
-        )}
-
-        <div className="rive-canvas">
-          <canvas 
-            ref={canvasRef} 
-            width={320} 
-            height={373}
-          />
-        </div>
-
-        {!isProcessing && textValues && (
-          <>
-            <div className="columns">
-              <div className="column">
+          <div className="space-y-6">            {/* Input Fields */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Left Fields - Original Prices */}
+              <div className="space-y-2">
                 {leftFields.map((field) => (
-                  <div
-                    key={field}
-                    className={`field ${
-                      !isGasOn && field === "GAS" ? "hidden" : ""
-                    }`}
-                  >
-                    <div className="label">{field}</div>
+                  <div key={field.id} className="flex flex-col space-y-1">
+                    <label 
+                      htmlFor={field.id} 
+                      className={cn("text-sm font-medium", {
+                        "opacity-50": field.id.toUpperCase().includes('GAS') && !isGasOn
+                      })}
+                    >
+                      {field.label}
+                    </label>
                     <input
                       type="text"
-                      className="input"
-                      value={textValues[field]}
-                      onChange={(e) => handleInputChange(e, field)}
+                      id={field.id}
+                      value={getFieldValue(field.id)}
+                      onChange={(e) => onInputChange(e, field.id)}
+                      disabled={field.id.toUpperCase().includes('GAS') && !isGasOn}
+                      className={cn(
+                        "rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring",
+                        {
+                          "opacity-50 cursor-not-allowed": field.id.toUpperCase().includes('GAS') && !isGasOn
+                        }
+                      )}
                     />
                   </div>
                 ))}
               </div>
-              <div className="column">
+
+              {/* Right Fields - Discount Prices */}
+              <div className="space-y-2">
                 {rightFields.map((field) => (
-                  <div
-                    key={field}
-                    className={`field ${
-                      !isGasOn && field === "GAS DISCOUNT" ? "hidden" : ""
-                    }`}
-                  >
-                    <div className="label">Со скидкой</div>
+                  <div key={field.id} className="flex flex-col space-y-1">
+                    <label 
+                      htmlFor={field.id} 
+                      className={cn("text-sm font-medium", {
+                        "opacity-50": field.id.toUpperCase().includes('GAS') && !isGasOn
+                      })}
+                    >
+                      {field.label}
+                    </label>
                     <input
                       type="text"
-                      className="input"
-                      value={textValues[field]}
-                      onChange={(e) => handleInputChange(e, field)}
+                      id={field.id}
+                      value={getFieldValue(field.id)}
+                      onChange={(e) => onInputChange(e, field.id)}
+                      disabled={field.id.toUpperCase().includes('GAS') && !isGasOn}
+                      className={cn(
+                        "rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring",
+                        {
+                          "opacity-50 cursor-not-allowed": field.id.toUpperCase().includes('GAS') && !isGasOn
+                        }
+                      )}
                     />
                   </div>
-                ))}
-              </div>
+                ))}              </div>
             </div>
 
-            <div style={{ marginTop: "1rem" }}>
-              <div className={`field ${!isCoffeeOn ? "hidden" : ""}`}>
-                <div className="label">{coffeeField}:</div>
+            {/* Coffee Input */}
+            <div className="space-y-2">
+              <div className="flex flex-col space-y-1">
+                <label 
+                  htmlFor={coffeeField.id} 
+                  className={cn("text-sm font-medium", {
+                    "opacity-50": !isCoffeeOn
+                  })}
+                >
+                  {coffeeField.label}
+                </label>
                 <input
                   type="text"
-                  className="input"
-                  value={textValues[coffeeField]}
-                  onChange={(e) => handleInputChange(e, coffeeField)}
-                />
-              </div>
-
-              <div className={`field ${!isGasOn ? "hidden" : ""}`}>
-                <div className="label">Скидка на ГАЗ от 10л:</div>
-                <input
-                  type="text"
-                  className="input"
-                  value={textValues["GAS_SALE"]}
-                  onChange={(e) => handleInputChange(e, "GAS_SALE")}
-                />
-              </div>
-
-              <div className="field">
-                <div className="label">Скидка за наличные:</div>
-                <input
-                  type="text"
-                  className="input"
-                  value={textValues["CASH_SALE"]}
-                  onChange={(e) => handleInputChange(e, "CASH_SALE")}
+                  id={coffeeField.id}
+                  value={getFieldValue(coffeeField.id)}
+                  onChange={(e) => onInputChange(e, coffeeField.id)}
+                  disabled={!isCoffeeOn}
+                  className={cn(
+                    "rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring",
+                    {
+                      "opacity-50 cursor-not-allowed": !isCoffeeOn
+                    }
+                  )}
                 />
               </div>
             </div>
 
-            <div className="log-container">
-              <button
-                className="download-button"
-                onClick={() => recordAndDownload({ stateMachineName: "State Machine 1" })}
-                disabled={!isFFmpegReady}
+            {/* Download Button */}
+            {isFFmpegReady && (
+              <Button
+                onClick={recordAndDownload}
+                disabled={isProcessing}
+                className="w-full"
+                variant={isProcessing ? "secondary" : "default"}
               >
-                Скачать видео
-              </button>
+                {isProcessing ? "Обработка..." : "Записать и скачать"}
+              </Button>
+            )}
+
+            {/* Arrow Direction Toggle */}
+            <div className="flex items-center justify-center">
+              <ToggleGroup
+                type="single"
+                value={isArrowLeft ? "left" : "right"}
+                onValueChange={(value) => {
+                  if (value) setIsArrowLeft(value === "left");
+                }}
+                className="w-full"
+              >
+                <ToggleGroupItem value="left" className="flex-1">
+                  ← Стрелки влево
+                </ToggleGroupItem>
+                <ToggleGroupItem value="right" className="flex-1">
+                  Стрелки вправо →
+                </ToggleGroupItem>
+              </ToggleGroup>
             </div>
-          </>
+
+            {/* Switches */}
+            <div className="flex flex-col gap-4">
+              <SwitchWithLabel
+                checked={isGasOn}
+                onCheckedChange={setIsGasOn}
+                label="Показать цену на газ"
+              />
+            
+              <SwitchWithLabel
+                checked={isCoffeeOn}
+                onCheckedChange={setCoffeeOn}
+                label="Показать цену на кофе"
+              />
+
+              <SwitchWithLabel
+                checked={includeCoffee}
+                onCheckedChange={setIncludeCoffee}
+                label="Добавить видео про кофе"
+              />
+            </div>
+          </div>
         )}
 
-        <div className="log-container">
-          <div className="log-box">
-            {logs.map((log, i) => (
-              <div key={i} className="log-entry">
-                {parseLog(log)}
-              </div>
-            ))}
+        {/* Logs Section */}
+        {logs.length > 0 && (
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold">Журнал операций:</h3>
+            <div className="max-h-40 overflow-y-auto rounded-md border bg-muted p-4">
+              <pre className="text-sm">
+                {logs.map((log, index) => (
+                  <div
+                    key={index}
+                    className={cn("py-1", {
+                      "text-red-500": log.includes("error"),
+                      "text-green-500": log.includes("success"),
+                    })}
+                  >
+                    {parseLog(log)}
+                  </div>
+                ))}
+              </pre>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
