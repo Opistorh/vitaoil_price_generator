@@ -1,0 +1,20 @@
+{
+  "appId": "com.tailwind.demo",
+  "productName": "TailwindDemo",
+  "directories": {
+    "buildResources": "public",
+    "output": "dist"
+  },
+  "files": [
+    "build/**/*",
+    "main.js",
+    "preload.js"
+  ],
+  "asar": false,
+  "compression": "store",
+  "win": {
+    "target": "portable"
+  },
+  "npmRebuild": false,
+  "buildDependenciesFromSource": false
+}
