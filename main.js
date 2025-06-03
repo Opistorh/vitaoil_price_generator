@@ -14,10 +14,16 @@ app.on('ready', () => {
     },
   });
 
-  // Открываем инструменты разработчика для отладки
-  mainWindow.webContents.openDevTools();
+  const isDev = !app.isPackaged;
 
-  mainWindow.loadFile(path.join(__dirname, 'public', 'index.html'));
+  if (isDev) {
+    // В режиме разработки поднимаем dev-сервер React
+    mainWindow.webContents.openDevTools();
+    mainWindow.loadURL('http://localhost:3000');
+  } else {
+    // В production грузим собранный React из папки build
+    mainWindow.loadFile(path.join(__dirname, 'build', 'index.html'));
+  }
 });
 
 app.on('window-all-closed', () => {
