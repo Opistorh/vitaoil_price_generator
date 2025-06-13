@@ -47,20 +47,6 @@ module.exports = {
           DEFAULT: "var(--card)",
           foreground: "var(--card-foreground)",
         },
-        sidebar: {
-          DEFAULT: "var(--sidebar)",
-          foreground: "var(--sidebar-foreground)",
-          primary: {
-            DEFAULT: "var(--sidebar-primary)",
-            foreground: "var(--sidebar-primary-foreground)",
-          },
-          accent: {
-            DEFAULT: "var(--sidebar-accent)",
-            foreground: "var(--sidebar-accent-foreground)",
-          },
-          border: "var(--sidebar-border)",
-          ring: "var(--sidebar-ring)",
-        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -69,12 +55,12 @@ module.exports = {
       },
       keyframes: {
         "accordion-down": {
-          from: { height: 0 },
+          from: { height: "0" },
           to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
           from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: 0 },
+          to: { height: "0" },
         },
       },
       animation: {
@@ -84,7 +70,4 @@ module.exports = {
     },
   },
   plugins: [require("tailwindcss-animate")],
-  future: {
-    hoverOnlyWhenSupported: true,
-  },
 }

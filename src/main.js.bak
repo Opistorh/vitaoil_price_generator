@@ -1,0 +1,63 @@
+const { app, BrowserWindow } = require('electron');
+const path = require('path');
+const fs = require('fs');
+
+// Настраиваем логирование
+const log = (...args) => {
+  const message = args.map(arg => 
+    typeof arg === 'object' ? JSON.stringify(arg) : arg
+  ).join(' ');
+  
+  console.log(message);
+  fs.appendFileSync(path.join(app.getPath('userData'), 'app.log'), 
+    `${new Date().toISOString()} ${message}\n`);
+};
+
+let mainWindow;
+
+const createWindow = () => {
+  log('App ready event fired');
+  
+  mainWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js'),
+    },
+    show: false,
+  });
+  
+  log('Main window created');  // Используем переменные Vite для загрузки  if (typeof MAIN_WINDOW_VITE_DEV_SERVER_URL !== 'undefined') {
+    log('Loading development URL:', MAIN_WINDOW_VITE_DEV_SERVER_URL);
+    mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL)
+      .catch(err => log('Failed to load dev URL:', err));
+    mainWindow.webContents.openDevTools();
+  } else {
+    const indexPath = path.join(__dirname, '../renderer/index.html');
+    log('Loading production path:', indexPath);
+    
+    if (fs.existsSync(indexPath)) {
+      log('index.html exists');
+      mainWindow.loadFile(indexPath)
+        .catch(err => log('Failed to load index.html:', err));
+    } else {
+      log('ERROR: index.html not found');
+      log('Current directory:', __dirname);
+      log('Directory contents:', fs.readdirSync(__dirname));
+    }
+  }
+
+  mainWindow.once('ready-to-show', () => {
+    log('Window ready to show');
+    mainWindow.show();
+    log('Window shown');
+  });
+});
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
+});

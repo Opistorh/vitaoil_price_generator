@@ -4,12 +4,14 @@
   "directories": {
     "buildResources": "public",
     "output": "dist"
-  },
-  "files": [
+  },  "files": [
     "build/**/*",
     "main.js",
     "preload.js"
   ],
+  "extraMetadata": {
+    "main": "main.js"
+  },
   "asar": false,
   "compression": "store",
   "win": {
