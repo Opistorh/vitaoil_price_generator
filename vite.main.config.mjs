@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite';
 import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill';
-import { node } from '../../package.json';
 import { resolve } from 'path';
 
 // https://vitejs.dev/config
@@ -18,11 +17,12 @@ export default defineConfig({
       fileName: () => '[name].js',
     },
     rollupOptions: {
-      external: ['electron', 'path', 'fs'],
+      external: ['electron', 'path', 'fs', 'crypto', 'stream', 'util', 'buffer', 'events', 'assert', 'url', 'http', 'https', 'os', 'zlib', 'net', 'tls', 'child_process', 'dgram', 'dns', 'module', 'process'],
     },
     minify: process.env.NODE_ENV === 'production',
     emptyOutDir: true,
     watch: process.env.NODE_ENV === 'development' ? {} : null,
+    copyPublicDir: false,
   },
   optimizeDeps: {
     esbuildOptions: {
@@ -32,6 +32,7 @@ export default defineConfig({
       plugins: [
         NodeGlobalsPolyfillPlugin({
           buffer: true,
+          process: true,
         }),
       ],
     },

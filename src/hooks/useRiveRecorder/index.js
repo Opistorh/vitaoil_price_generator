@@ -1,37 +1,14 @@
 // src\hooks\useRiveRecorder\index.js
 
-import { useRef, useState, useEffect } from "react";
-import {
-  initFFmpeg,
-  handleFFmpegLogs,
-  buildFinalVideo,
-} from "./ffmpegController";
+import { useState } from "react";
+import { useFFmpeg } from "../../components/FFmpegProvider.jsx";
+import { buildFinalVideo } from "./ffmpegController";
 import { recordFrames } from "./frameRecorder";
 import { fetchFile } from "@ffmpeg/util";
 
 export function useRiveRecorder({ addLog, updateLastLog }) {
-  const ffmpegRef = useRef(null);
-  const [isReady, setIsReady] = useState(false);
+  const { ffmpeg, isReady, outputResolutionRef } = useFFmpeg();
   const [isProcessing, setIsProcessing] = useState(false);
-  const outputResolutionRef = useRef(null);
-  useEffect(() => {
-    // console.log("[useRiveRecorder] useEffect triggered");
-    const initializeFFmpeg = async () => {
-      if (ffmpegRef.current) {
-        // FFmpeg уже инициализирован, просто обновляем состояние
-        setIsReady(true);
-        return;
-      }
-
-      const ffmpeg = await initFFmpeg(addLog);
-      handleFFmpegLogs(ffmpeg, addLog, outputResolutionRef);
-      ffmpegRef.current = ffmpeg;
-      setIsReady(true);
-      addLog("FFmpeg готов к работе.");
-    };
-
-    initializeFFmpeg();
-  }, []);
 
   const recordAndDownload = async ({
     rive,
@@ -48,7 +25,6 @@ export function useRiveRecorder({ addLog, updateLastLog }) {
     setIsProcessing(true);
 
     try {
-      const ffmpeg = ffmpegRef.current;
       const resolutionRef = outputResolutionRef;
 
       await recordFrames({

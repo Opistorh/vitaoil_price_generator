@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { Rive, Layout, Fit, Alignment } from "@rive-app/canvas";
-import { useRiveRecorder } from "./hooks/useRiveRecorder/index.js";
 import { addLog, updateLastLog } from "./logger.jsx";
 import { handleInputChange as handleInputChangeUtil } from "./utils/handleInputChange";
 import {
@@ -14,6 +13,7 @@ import {
 import initialValues from "./initialValues";
 import MainLayout from "./components/MainLayout.jsx";
 import { ThemeProvider } from "./components/ThemeProvider.jsx";
+import { FFmpegProvider } from './components/FFmpegProvider.jsx';
 import "./index.css";
 
 export default function App() {
@@ -31,7 +31,8 @@ export default function App() {
   const [includeCoffee, setIncludeCoffee] = useState(true);
   const [isCoffeeOn, setCoffeeOn] = useState(true);
   const [isArrowLeft, setIsArrowLeft] = useState(false);
-  const [isGasOn, setIsGasOn] = useState(true);  const [textValues, setTextValues] = useState(initialValues);
+  const [isGasOn, setIsGasOn] = useState(true);
+  const [textValues, setTextValues] = useState(initialValues);
   
   // Initialize Rive
   useEffect(() => {
@@ -238,53 +239,28 @@ export default function App() {
     });
   };
 
-  const {
-    isReady: isFFmpegReady,
-    isProcessing,
-    recordAndDownload,
-  } = useRiveRecorder({
-    addLog: handleAddLog,
-    updateLastLog: handleUpdateLastLog,
-  });
-
-  const handleDownload = () => {
-    if (textValues) {
-      saveTextValuesToCookies(textValues);
-      saveCheckboxesToCookies({
-        includeCoffee,
-        isCoffeeOn,
-        isArrowLeft,
-        isGasOn
-      });      recordAndDownload({ 
-        rive: riveRef.current, 
-        stateMachineName, 
-        includeCoffee,
-        isCoffeeOn,
-        isGasOn,
-        isArrowLeft,
-      });
-    }
-  };
-
   return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-      <MainLayout
-        canvasRef={canvasRef}
-        textValues={textValues}
-        handleInputChange={handleInputChangePage}
-        isArrowLeft={isArrowLeft}
-        setIsArrowLeft={setIsArrowLeft}
-        isGasOn={isGasOn}
-        setIsGasOn={setIsGasOn}
-        isProcessing={isProcessing}
-        isFFmpegReady={isFFmpegReady}
-        recordAndDownload={handleDownload}
-        logs={logs}
-        includeCoffee={includeCoffee}
-        setIncludeCoffee={setIncludeCoffee}
-        isCoffeeOn={isCoffeeOn}
-        setCoffeeOn={setCoffeeOn}
-      />
+    <ThemeProvider>
+      <FFmpegProvider addLog={handleAddLog}>
+        <MainLayout
+          textValues={textValues}
+          handleInputChange={handleInputChangePage}
+          riveRef={riveRef}
+          canvasRef={canvasRef}
+          logs={logs}
+          addLog={handleAddLog}
+          updateLastLog={handleUpdateLastLog}
+          includeCoffee={includeCoffee}
+          setIncludeCoffee={setIncludeCoffee}
+          isCoffeeOn={isCoffeeOn}
+          setCoffeeOn={setCoffeeOn}
+          isArrowLeft={isArrowLeft}
+          setIsArrowLeft={setIsArrowLeft}
+          isGasOn={isGasOn}
+          setIsGasOn={setIsGasOn}
+          stateMachineName={stateMachineName}
+        />
+      </FFmpegProvider>
     </ThemeProvider>
   );
 }

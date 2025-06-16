@@ -7,6 +7,9 @@ import { Button } from "./ui/button.jsx";
 import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group.jsx";
 import { Switch } from "./ui/switch.jsx";
 import { cn } from "../utils/cn";
+import { useRiveRecorder } from '../hooks/useRiveRecorder';
+import { useFFmpeg } from './FFmpegProvider.jsx';
+import { saveTextValuesToCookies, saveCheckboxesToCookies } from '../utils/cookies';
 
 export default function MainLayout({
   canvasRef,
@@ -16,15 +19,21 @@ export default function MainLayout({
   setIsArrowLeft,
   isGasOn,
   setIsGasOn,
-  isProcessing,
-  isFFmpegReady,
-  recordAndDownload,
+  stateMachineName,
   logs,
+  addLog,
+  updateLastLog,
   includeCoffee,
   setIncludeCoffee,
   isCoffeeOn,
-  setCoffeeOn,
+  setCoffeeOn
 }) {
+  const { isReady: isFFmpegReady } = useFFmpeg();
+  const { isProcessing, recordAndDownload } = useRiveRecorder({
+    addLog,
+    updateLastLog
+  });
+
   // Функция для безопасного получения значения поля
   const getFieldValue = (fieldId) => {
     return textValues?.[fieldId] || "";
@@ -34,6 +43,26 @@ export default function MainLayout({
       event: e,
       variableName: fieldId,
     });
+  };
+
+  const handleDownload = () => {
+    if (textValues) {
+      saveTextValuesToCookies(textValues);
+      saveCheckboxesToCookies({
+        includeCoffee: true,
+        isCoffeeOn: true,
+        isArrowLeft,
+        isGasOn
+      });
+      recordAndDownload({
+        rive: canvasRef.current,
+        stateMachineName,
+        includeCoffee: true,
+        isCoffeeOn: true,
+        isGasOn,
+        isArrowLeft,
+      });
+    }
   };
 
   // Функция для создания элемента Switch с меткой
@@ -127,7 +156,7 @@ export default function MainLayout({
                 <label 
                   htmlFor={coffeeField.id} 
                   className={cn("text-sm font-medium", {
-                    "opacity-50": !isCoffeeOn
+                    "opacity-50": false
                   })}
                 >
                   {coffeeField.label}
@@ -137,11 +166,11 @@ export default function MainLayout({
                   id={coffeeField.id}
                   value={getFieldValue(coffeeField.id)}
                   onChange={(e) => onInputChange(e, coffeeField.id)}
-                  disabled={!isCoffeeOn}
+                  disabled={false}
                   className={cn(
                     "rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring",
                     {
-                      "opacity-50 cursor-not-allowed": !isCoffeeOn
+                      "opacity-50 cursor-not-allowed": false
                     }
                   )}
                 />
@@ -151,7 +180,7 @@ export default function MainLayout({
             {/* Download Button */}
             {isFFmpegReady && (
               <Button
-                onClick={recordAndDownload}
+                onClick={handleDownload}
                 disabled={isProcessing}
                 className="w-full"
                 variant={isProcessing ? "secondary" : "default"}

@@ -7,10 +7,22 @@ export default defineConfig({
   plugins: [react()],
   base: './',
   root: resolve(process.cwd(), 'src/renderer'),
+  publicDir: resolve(process.cwd(), 'public'),
   build: {
     outDir: '../../dist/renderer',
     emptyOutDir: true,
-    assetsInlineLimit: 0
+    assetsInlineLimit: 0,
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.name.endsWith('.mp4')) {
+            return 'assets/[name][extname]';
+          }
+          return 'assets/[name]-[hash][extname]';
+        }
+      }
+    }
   },
   css: {
     postcss: './postcss.config.js',
@@ -40,12 +52,22 @@ export default defineConfig({
         global: 'globalThis'
       },
       loader: {
-        '.js': 'jsx'
+        '.js': 'jsx',
+        '.jsx': 'jsx'
       }
     }
   },
   server: {
-    port: 3000,
-    host: true
+    port: 5173,
+    host: true,
+    fs: {
+      strict: false,
+      allow: ['..']
+    }
+  },
+  esbuild: {
+    loader: 'jsx',
+    include: /src\/.*\.jsx?$/,
+    exclude: []
   }
 });

@@ -3,13 +3,30 @@
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 
 export async function initFFmpeg(addLog) {
-  const ffmpeg = new FFmpeg({ log: true });
-  await ffmpeg.load();
-  return ffmpeg;
+  addLog('Начинаем инициализацию FFmpeg...');
+  const ffmpeg = new FFmpeg({
+    log: true,
+    //corePath: 'https://unpkg.com/@ffmpeg/core@0.12.4/dist/ffmpeg-core.js'
+    corePath: '/ffmpeg/ffmpeg-core.js',
+    wasmPath: '/ffmpeg/ffmpeg-core.wasm',
+    workerPath: '/ffmpeg/ffmpeg-core.worker.js'
+  });
+  
+  try {
+    addLog('Загрузка FFmpeg...');
+    await ffmpeg.load();
+    addLog('FFmpeg успешно загружен!');
+    return ffmpeg;
+  } catch (error) {
+    addLog(`Ошибка при инициализации FFmpeg: ${error.message}`);
+    console.error('FFmpeg initialization error:', error);
+    throw error;
+  }
 }
 
 export function handleFFmpegLogs(ffmpeg, addLog, outputResolutionRef) {
   ffmpeg.on("log", ({ message }) => {
+    console.log(`[FFmpeg Log] ${message}`); // Добавляем логи в консоль
     addLog(`[ffmpeg] ${message}`);
 
     if (!outputResolutionRef.current) {

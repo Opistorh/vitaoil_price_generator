@@ -23,3 +23,9 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# electron-forge
+/.vite
+
+# ffmpeg
+/public/ffmpeg
