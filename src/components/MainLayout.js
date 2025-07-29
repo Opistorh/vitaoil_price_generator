@@ -59,7 +59,7 @@ export default function MainLayout({
               ref={canvasRef}
               width={640}
               height={748}
-              className="absolute inset-0 h-full rounded-lg border bg-white shadow-sm"
+              className="h-full"
             />
           </div>
         </div>
