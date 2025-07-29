@@ -1,5 +1,5 @@
 body {
-  background-color: #19191d;
+  background-color: #F0FFE9;
 }
 
 .text-run-control {
@@ -24,7 +24,7 @@ body {
 }
 
 .rive-canvas {
-  margin: 20px 0;
+  /*margin: 20px 0;*/
   background-color: transparent;
 }
 

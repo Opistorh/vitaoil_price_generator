@@ -81,9 +81,11 @@ export async function recordFrames({
   }
 
   const canvas = document.querySelector("canvas");
-  // if (!canvas) throw new Error("Canvas с Rive не найден!");
+  if (!canvas) throw new Error("Canvas с Rive не найден!");
+  console.log("Canvas width:", canvas.width, "Canvas height:", canvas.height);
+  console.log("Canvas style width:", canvas.style.width, "Canvas style height:", canvas.style.height);
 
-  const frames = [];  
+  const frames = [];
   const fps = 30;
   const interval = 1000 / fps;
   const maxDuration = 21000;
@@ -96,7 +98,24 @@ export async function recordFrames({
     const timerId = setInterval(() => {
       elapsed += interval;
       const dataURL = canvas.toDataURL("image/png");
-      frames.push(dataURL);
+      // Проверка размеров кадра
+      const img = new window.Image();
+      img.src = dataURL;
+      img.onload = function() {
+        console.log(`Frame ${frames.length + 1}:`, img.width, img.height);
+        // Если кадр не 320x374, делаем ресайз
+        if (img.width !== 320 || img.height !== 374) {
+          const tempCanvas = document.createElement("canvas");
+          tempCanvas.width = 320;
+          tempCanvas.height = 374;
+          const ctx = tempCanvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, 320, 374);
+          const resizedDataURL = tempCanvas.toDataURL("image/png");
+          frames.push(resizedDataURL);
+        } else {
+          frames.push(dataURL);
+        }
+      };
 
       const currentFrame = frames.length;
       const newPercent = Math.floor((currentFrame / totalFrames) * 100);

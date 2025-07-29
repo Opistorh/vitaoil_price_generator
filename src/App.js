@@ -101,9 +101,12 @@ export default function App() {
       setTextValues(loadedText);      
       
       // Отфильтруем поля, которые точно есть в Rive
-      const riveFields = ["95 PREM", "92 ECO", "92 EURO", "DIESEL", "GAS",
-                         "95 PREM DISCOUNT", "92 ECO DISCOUNT", "92 EURO DISCOUNT",
-                         "DIESEL DISCOUNT", "GAS DISCOUNT", "COFFEE"];
+      const riveFields = [
+        "95 PREM", "92 ECO", "92 EURO", "DIESEL", "GAS",
+        "95 PREM DISCOUNT", "92 ECO DISCOUNT", "92 EURO DISCOUNT",
+        "DIESEL DISCOUNT", "GAS DISCOUNT", "COFFEE",
+        "GAS SALE", "CASH SALE"
+      ];
 
       Object.entries(loadedText)
         .filter(([key]) => riveFields.includes(key))
