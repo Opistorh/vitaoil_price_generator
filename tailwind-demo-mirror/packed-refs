@@ -1,0 +1,8 @@
+# pack-refs with: peeled fully-peeled sorted 
+a331d04b2a7aeb79fb04faa11422b99defb7a56d refs/heads/batnik1
+016b81b81df71aba5007ea55e0084688b665e4b0 refs/heads/codex/ускорить-сборку-exe-без-контента
+8c6a69304f2c117a8fd100f5d5b1c7a47e0c24f7 refs/heads/desktop_app
+ce2398eeadb8f653eae9fdece9afe44eed64a5d3 refs/heads/main
+fff140edec4f286d306db8fbcee3cd63a78708f8 refs/heads/shadcn
+e59deef099c7fc1a86db588bc228379934f26f4a refs/heads/single-riv-file
+016b81b81df71aba5007ea55e0084688b665e4b0 refs/pull/1/head
