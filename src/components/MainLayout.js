@@ -50,7 +50,7 @@ export default function MainLayout({
     <div className="min-h-screen bg-background p-4" translate="no">
       <div className="flex items-center justify-center mb-6">
         <h1 className="text-2xl font-bold text-center">Генератор видео Vitaoil</h1>
-        <img src="/Vitaoil%20logo.svg" alt="Vitaoil logo" className="w-8 h-8 ml-2" />
+        <img src="/vitaoil_logo.svg" alt="Vitaoil logo" className="w-8 h-8 ml-2" />
       </div>
       <div className="mx-auto w-full max-w-[320px] space-y-6">        {/* Canvas */}
         <div className="relative w-full max-w-[320px] mx-auto">
@@ -263,7 +263,7 @@ export default function MainLayout({
         <Button asChild variant="link" className="text-muted-foreground text-xs flex items-center gap-1">
           <a href="https://kashakov.art/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1">
             Made by Kashakov
-            <img src="/favicon-static.tildacdn.com%20(1).svg" alt="icon" className="w-4 h-4 inline-block align-middle" />
+            <img src="/kashakov_logo.svg" alt="icon" className="w-4 h-4 inline-block align-middle" />
           </a>
         </Button>
       </div>
