@@ -82,7 +82,8 @@
       "server.js"
     ],
     "assets": [
-      "build/**/*"
+      "build",
+      "build/**"
     ]
   }
 }
