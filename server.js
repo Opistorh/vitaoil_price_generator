@@ -1,3 +1,11 @@
+// Глобальное логирование ошибок для отладки exe-файла
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection:', reason);
+});
+console.log('Server starting...');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
