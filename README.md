@@ -84,6 +84,42 @@ npm run dev
 - Настроил механизм автозапоминания настроек и загрузки из cookie
 - Отладил баг со склейкой и увеличенной длительностью финального видео (см. `-shortest` fix в ffmpegController.js)
 
+## 🧩 Сборка исполняемых файлов (macOS и Windows)
+
+Требования:
+- Node.js 18
+- `pkg` уже в devDependencies
+
+Сборка:
+```bash
+# macOS (ARM64)
+npm run pkg:mac
+
+# Windows (x64)
+npm run pkg:win
+
+# Кросс-сборка (macOS ARM + Windows x64)
+npm run pkg:all
+```
+
+Результат:
+- В `dist/` появится самодостаточный бинарь:
+  - macOS: `dist/vitaoil_price_generator-macos-arm64`
+  - Windows: `dist/vitaoil_price_generator-win.exe`
+
+Запуск:
+```bash
+# macOS
+./dist/vitaoil_price_generator-macos-arm64
+# Windows
+./dist/vitaoil_price_generator-win.exe
+```
+
+Примечания:
+- Все файлы из `build/**` вшиваются внутрь бинаря (см. `pkg.assets` в `package.json`).
+- `server.js` читает ассеты из snapshot (`__dirname/build/...`) — дополнительные папки рядом не требуются.
+- macOS может запросить разрешение на запуск (Settings → Privacy & Security → Open Anyway).
+
 ## 📬 Связаться со мной
 
 - 👨‍💻 Артём Кашаков — [@LinkedIn](https://www.linkedin.com/in/artem-kashakov/) / [Telegram](t.me/artem_kashakov)
