@@ -43,7 +43,10 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "build:win": "pkg . --targets node18-win-x64 --output build/server-win.exe"
+    "build:win": "pkg . --targets node18-win-x64 --output build/server-win.exe",
+    "pkg:mac": "npm run build && pkg . --targets node18-macos-arm64 --output dist/tailwind-demo-macos-arm64",
+    "pkg:win": "npm run build && pkg . --targets node18-win-x64 --output dist/tailwind-demo-win.exe",
+    "pkg:all": "npm run build && pkg . --targets node18-macos-arm64,node18-win-x64 --out-path dist"
   },
   "eslintConfig": {
     "extends": [
@@ -82,8 +85,12 @@
       "server.js"
     ],
     "assets": [
-      "build",
-      "build/**"
+      "build/index.html",
+      "build/**",
+      "build/**/*",
+      "public",
+      "public/**",
+      "public/**/*"
     ]
   }
 }

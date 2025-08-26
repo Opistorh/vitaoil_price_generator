@@ -10,7 +10,11 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const buildDir = path.join(__dirname, 'build');
+// Определяем путь к папке build. Для бинаря pkg читаем из snapshot через __dirname
+const isPackaged = !!process.pkg;
+const buildDir = isPackaged
+  ? path.join(__dirname, 'build')
+  : path.join(__dirname, 'build');
 const port = 3000;
 
 const server = http.createServer((req, res) => {
@@ -36,12 +40,24 @@ const server = http.createServer((req, res) => {
         res.setHeader('Content-Type', 'image/jpeg');
       } else if (filePath.endsWith('.ico')) {
         res.setHeader('Content-Type', 'image/x-icon');
+      } else if (filePath.endsWith('.js')) {
+        res.setHeader('Content-Type', 'application/javascript');
+      } else if (filePath.endsWith('.css')) {
+        res.setHeader('Content-Type', 'text/css');
       }
       fs.createReadStream(filePath).pipe(res);
     } else {
       // SPA fallback: serve index.html только для путей без расширения
       if (path.extname(urlPath) === '') {
-        fs.createReadStream(path.join(buildDir, 'index.html')).pipe(res);
+        const indexPath = path.join(buildDir, 'index.html');
+        fs.stat(indexPath, (indexErr, indexStat) => {
+          if (!indexErr && indexStat.isFile()) {
+            fs.createReadStream(indexPath).pipe(res);
+          } else {
+            res.statusCode = 500;
+            res.end('Index file not found');
+          }
+        });
       } else {
         res.statusCode = 404;
         res.end('Not found');

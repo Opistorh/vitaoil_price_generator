@@ -128,16 +128,18 @@ export default function MainLayout({
             
 
             {/* Download Button */}
-            {isFFmpegReady && (
-              <Button
-                onClick={recordAndDownload}
-                disabled={isProcessing}
-                className="w-full"
-                variant={isProcessing ? "secondary" : "default"}
-              >
-                {isProcessing ? "Обработка..." : "Записать и скачать"}
-              </Button>
-            )}
+            <Button
+              onClick={recordAndDownload}
+              disabled={!isFFmpegReady || isProcessing}
+              className="w-full"
+              variant={!isFFmpegReady || isProcessing ? "secondary" : "default"}
+            >
+              {!isFFmpegReady
+                ? "Подготовка FFmpeg..."
+                : isProcessing
+                ? "Обработка..."
+                : "Записать и скачать"}
+            </Button>
 
 {/* Sale Fields */}
             <div className="space-y-2">
@@ -238,26 +240,28 @@ export default function MainLayout({
         )}
 
         {/* Logs Section */}
-        {logs.length > 0 && (
-          <div className="space-y-2">
-            <h3 className="text-lg font-semibold">Журнал операций:</h3>
-            <div className="max-h-40 overflow-y-auto rounded-md border bg-muted p-4">
-              <pre className="text-sm">
-                {logs.map((log, index) => (
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold">Журнал операций:</h3>
+          <div className="max-h-40 overflow-y-auto rounded-md border bg-muted p-4">
+            <pre className="text-sm">
+              {logs.length === 0 ? (
+                <div className="text-muted-foreground">Ожидание событий…</div>
+              ) : (
+                logs.map((log, index) => (
                   <div
                     key={index}
                     className={cn("py-1", {
-                      "text-red-500": log.includes("error"),
-                      "text-green-500": log.includes("success"),
+                      "text-red-500": log.toLowerCase().includes("ошибка") || log.toLowerCase().includes("error"),
+                      "text-green-500": log.toLowerCase().includes("готово") || log.toLowerCase().includes("success"),
                     })}
                   >
                     {parseLog(log)}
                   </div>
-                ))}
-              </pre>
-            </div>
+                ))
+              )}
+            </pre>
           </div>
-        )}
+        </div>
       </div>
       <div className="mt-2 flex justify-center">
         <Button asChild variant="link" className="text-muted-foreground text-xs flex items-center gap-1">

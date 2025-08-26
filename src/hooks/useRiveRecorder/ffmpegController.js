@@ -2,9 +2,20 @@
 
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 
-export async function initFFmpeg(addLog) {
-  const ffmpeg = new FFmpeg({ log: true });
+export async function initFFmpeg(addLog, outputResolutionRef) {
+  const ffmpeg = new FFmpeg({ 
+    log: true,
+    coreURL: '/ffmpeg/ffmpeg-core.js',
+    wasmURL: '/ffmpeg/ffmpeg-core.wasm',
+    workerURL: '/ffmpeg/ffmpeg-worker.js'
+  });
+  
+  // Подключаем логирование заранее, чтобы видеть процесс загрузки модулей
+  handleFFmpegLogs(ffmpeg, addLog, outputResolutionRef);
+  addLog("FFmpeg: инициализация...");
+  addLog("FFmpeg: загрузка модулей из локальных файлов...");
   await ffmpeg.load();
+  addLog("FFmpeg: модули загружены.");
   return ffmpeg;
 }
 
