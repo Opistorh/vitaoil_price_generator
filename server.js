@@ -9,6 +9,7 @@ console.log('Server starting...');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const { spawnSync } = require('child_process');
 
 // Определяем путь к папке build. Для бинаря pkg читаем из snapshot через __dirname
 const isPackaged = !!process.pkg;
@@ -16,6 +17,35 @@ const buildDir = isPackaged
   ? path.join(__dirname, 'build')
   : path.join(__dirname, 'build');
 const port = 3000;
+
+// На macOS попытаться убрать атрибут карантина и выставить бит исполнителя
+function tryRemoveQuarantineFromSelf() {
+  if (process.platform !== 'darwin') return;
+  try {
+    const execPath = process.execPath;
+    console.log('Detected macOS — attempting to remove quarantine from:', execPath);
+
+    // Попытаться выставить бит исполнителя (на случай, если его нет)
+    const chmod = spawnSync('chmod', ['+x', execPath]);
+    if (chmod.error) {
+      console.error('chmod failed:', chmod.error);
+    } else if (chmod.status !== 0) {
+      console.error('chmod exit code', chmod.status, '-', (chmod.stderr || '').toString());
+    }
+
+    // Удалить com.apple.quarantine рекурсивно для файла (не для директории)
+    const xattr = spawnSync('xattr', ['-dr', 'com.apple.quarantine', execPath]);
+    if (xattr.error) {
+      console.error('xattr failed:', xattr.error);
+    } else if (xattr.status !== 0) {
+      console.error('xattr exit code', xattr.status, '-', (xattr.stderr || '').toString());
+    } else {
+      console.log('xattr: quarantine attribute removed (if it existed)');
+    }
+  } catch (err) {
+    console.error('Error while trying to remove quarantine:', err);
+  }
+}
 
 const server = http.createServer((req, res) => {
   let urlPath = decodeURIComponent(req.url.split('?')[0].split('#')[0]);
@@ -65,6 +95,9 @@ const server = http.createServer((req, res) => {
     }
   });
 });
+
+// Попытаемся убрать карантин (только на macOS) перед запуском сервера
+tryRemoveQuarantineFromSelf();
 
 server.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
