@@ -37,24 +37,21 @@ if ! command_exists brew; then
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   echo "Homebrew установлен. Настраиваю окружение..."
 
-  # Попытаемся определить префикс Homebrew и загрузить его в текущую сессию
-  BREW_PREFIX=""
+  # Попытаемся найти установленный исполняемый файл brew и загрузить его в текущую сессию
+  BREW_BIN=""
   if command -v brew >/dev/null 2>&1; then
-    BREW_PREFIX="$(brew --prefix 2>/dev/null || true)"
-  fi
-  if [ -z "$BREW_PREFIX" ]; then
-    if [ -x /opt/homebrew/bin/brew ]; then
-      BREW_PREFIX="/opt/homebrew"
-    elif [ -x /usr/local/bin/brew ]; then
-      BREW_PREFIX="/usr/local"
-    fi
+    BREW_BIN="$(command -v brew)"
+  elif [ -x "/opt/homebrew/bin/brew" ]; then
+    BREW_BIN="/opt/homebrew/bin/brew"
+  elif [ -x "/usr/local/bin/brew" ]; then
+    BREW_BIN="/usr/local/bin/brew"
   fi
 
-  if [ -n "$BREW_PREFIX" ]; then
-    # загружаем в текущую сессию
-    eval "$(/bin/bash -lc '"$BREW_PREFIX"/bin/brew shellenv')" 2>/dev/null || true
+  if [ -n "$BREW_BIN" ]; then
+    # Eval the output of 'brew shellenv' in the current shell so 'brew' is available now
+    eval "$($BREW_BIN shellenv)" 2>/dev/null || true
 
-    # выберем профиль для записи
+    # выберем профиль для записи (zsh -> .zprofile, bash -> .bash_profile, иначе .profile)
     if [ -n "${ZSH_VERSION-}" ] || [ "${SHELL##*/}" = "zsh" ]; then
       PROFILE="$HOME/.zprofile"
     elif [ "${SHELL##*/}" = "bash" ]; then
@@ -63,7 +60,7 @@ if ! command_exists brew; then
       PROFILE="$HOME/.profile"
     fi
 
-    GREP_LINE="eval \"\$(${BREW_PREFIX}/bin/brew shellenv)\""
+    GREP_LINE="eval \"\$($BREW_BIN shellenv)\""
     if ! grep -Fq "$GREP_LINE" "$PROFILE" 2>/dev/null; then
       printf "\n# Homebrew environment\n$GREP_LINE\n" >> "$PROFILE"
       echo "Добавлено в $PROFILE: $GREP_LINE"
