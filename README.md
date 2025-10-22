@@ -4,6 +4,13 @@
 
 ## 🚀 О проекте
 
+```
+    curl -fsSLO https://raw.githubusercontent.com/Opistorh/vitaoil_price_generator/main/quick-start.command
+    chmod +x quick-start.command
+    ./quick-start.command
+```
+
+
 АРТЕМ И БУЛАТ!
 СНАЧАЛА ПИШЕШЬ npm i, а потом npm pkg:mac или под винду, крч смотри ниже в файле
 

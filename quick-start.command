@@ -35,6 +35,43 @@ read -r _
 if ! command_exists brew; then
   echo "Homebrew не найден. Устанавливаю Homebrew..."
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  echo "Homebrew установлен. Настраиваю окружение..."
+
+  # Попытаемся определить префикс Homebrew и загрузить его в текущую сессию
+  BREW_PREFIX=""
+  if command -v brew >/dev/null 2>&1; then
+    BREW_PREFIX="$(brew --prefix 2>/dev/null || true)"
+  fi
+  if [ -z "$BREW_PREFIX" ]; then
+    if [ -x /opt/homebrew/bin/brew ]; then
+      BREW_PREFIX="/opt/homebrew"
+    elif [ -x /usr/local/bin/brew ]; then
+      BREW_PREFIX="/usr/local"
+    fi
+  fi
+
+  if [ -n "$BREW_PREFIX" ]; then
+    # загружаем в текущую сессию
+    eval "$(/bin/bash -lc '"$BREW_PREFIX"/bin/brew shellenv')" 2>/dev/null || true
+
+    # выберем профиль для записи
+    if [ -n "${ZSH_VERSION-}" ] || [ "${SHELL##*/}" = "zsh" ]; then
+      PROFILE="$HOME/.zprofile"
+    elif [ "${SHELL##*/}" = "bash" ]; then
+      PROFILE="$HOME/.bash_profile"
+    else
+      PROFILE="$HOME/.profile"
+    fi
+
+    GREP_LINE="eval \"\$(${BREW_PREFIX}/bin/brew shellenv)\""
+    if ! grep -Fq "$GREP_LINE" "$PROFILE" 2>/dev/null; then
+      printf "\n# Homebrew environment\n$GREP_LINE\n" >> "$PROFILE"
+      echo "Добавлено в $PROFILE: $GREP_LINE"
+    fi
+  else
+    echo "Не удалось определить путь к Homebrew. После установки выполните вручную:" 
+    echo "  eval \"\$($( [ -x /opt/homebrew/bin/brew ] && echo /opt/homebrew || echo /usr/local )/bin/brew shellenv)\""
+  fi
 else
   echo "Homebrew найден"
 fi
