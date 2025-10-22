@@ -1,11 +1,7 @@
 // src\hooks\useRiveRecorder\index.js
 
 import { useRef, useState, useEffect } from "react";
-import {
-  initFFmpeg,
-  handleFFmpegLogs,
-  buildFinalVideo,
-} from "./ffmpegController";
+import { initFFmpeg, buildFinalVideo } from "./ffmpegController";
 import { recordFrames } from "./frameRecorder";
 import { fetchFile } from "@ffmpeg/util";
 
@@ -23,8 +19,7 @@ export function useRiveRecorder({ addLog, updateLastLog }) {
         return;
       }
 
-      const ffmpeg = await initFFmpeg(addLog);
-      handleFFmpegLogs(ffmpeg, addLog, outputResolutionRef);
+      const ffmpeg = await initFFmpeg(addLog, outputResolutionRef);
       ffmpegRef.current = ffmpeg;
       setIsReady(true);
       addLog("FFmpeg готов к работе.");

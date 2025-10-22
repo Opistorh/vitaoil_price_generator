@@ -2,9 +2,20 @@
 
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 
-export async function initFFmpeg(addLog) {
-  const ffmpeg = new FFmpeg({ log: true });
+export async function initFFmpeg(addLog, outputResolutionRef) {
+  const ffmpeg = new FFmpeg({ 
+    log: true,
+    coreURL: '/ffmpeg/ffmpeg-core.js',
+    wasmURL: '/ffmpeg/ffmpeg-core.wasm',
+    workerURL: '/ffmpeg/ffmpeg-worker.js'
+  });
+  
+  // Подключаем логирование заранее, чтобы видеть процесс загрузки модулей
+  handleFFmpegLogs(ffmpeg, addLog, outputResolutionRef);
+  addLog("FFmpeg: инициализация...");
+  addLog("FFmpeg: загрузка модулей из локальных файлов...");
   await ffmpeg.load();
+  addLog("FFmpeg: модули загружены.");
   return ffmpeg;
 }
 
@@ -60,7 +71,7 @@ export async function buildFinalVideo({
           "-i",
           "main.mp4",
           "-vf",
-          `scale=${TARGET_WIDTH}:${TARGET_HEIGHT}`,
+          `scale=${TARGET_WIDTH}:${TARGET_HEIGHT},setsar=1,setdar=${TARGET_WIDTH}/${TARGET_HEIGHT}`,
           "-c:v",
           "libx264",
           "-preset",
@@ -74,13 +85,13 @@ export async function buildFinalVideo({
         "Масштабирование main.mp4"
       );
 
-      // Масштабируем coffee.mp4
+      // Масштабируем coffee.mp4 по высоте, затем crop по ширине
       await executeFFmpeg(
         [
           "-i",
           "coffee.mp4",
           "-vf",
-          `scale=${TARGET_WIDTH}:${TARGET_HEIGHT}`,
+          `scale=-2:${TARGET_HEIGHT},crop=${TARGET_WIDTH}:${TARGET_HEIGHT},setsar=1,setdar=${TARGET_WIDTH}/${TARGET_HEIGHT}`,
           "-c:v",
           "libx264",
           "-preset",
@@ -91,7 +102,7 @@ export async function buildFinalVideo({
           "yuv420p",
           "coffee_scaled.mp4",
         ],
-        "Масштабирование coffee.mp4"
+        "Масштабирование по высоте и crop coffee.mp4"
       );
 
       // Склеиваем видео
@@ -132,7 +143,7 @@ export async function buildFinalVideo({
         "-i",
         "main.mp4",
         "-vf",
-        `scale=${TARGET_WIDTH}:${TARGET_HEIGHT}`,
+        `scale=${TARGET_WIDTH}:${TARGET_HEIGHT},setsar=1,setdar=${TARGET_WIDTH}/${TARGET_HEIGHT}`,
         "-c:v",
         "libx264",
         "-preset",

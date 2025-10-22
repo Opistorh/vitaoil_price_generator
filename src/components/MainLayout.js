@@ -1,7 +1,7 @@
 // src/components/MainLayout.js
 
 import React from "react";
-import { leftFields, rightFields, coffeeField } from "../fieldConfig";
+import { leftFields, rightFields, coffeeField, saleFields } from "../fieldConfig";
 import { parseLog } from "../logger";
 import { Button } from "./ui/button";
 import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
@@ -48,14 +48,18 @@ export default function MainLayout({
 
   return (
     <div className="min-h-screen bg-background p-4" translate="no">
-      <div className="mx-auto w-full max-w-[360px] space-y-6">        {/* Canvas */}
+      <div className="flex items-center justify-center mb-6">
+        <h1 className="text-2xl font-bold text-center">Генератор видео Vitaoil</h1>
+        <img src="/vitaoil_logo.svg" alt="Vitaoil logo" className="w-8 h-8 ml-2" />
+      </div>
+      <div className="mx-auto w-full max-w-[320px] space-y-6">        {/* Canvas */}
         <div className="relative w-full max-w-[320px] mx-auto">
-          <div className="aspect-[640/748] w-full">
+          <div className="aspect-[640/748]">
             <canvas
               ref={canvasRef}
               width={640}
               height={748}
-              className="absolute inset-0 w-full h-full rounded-lg border bg-white shadow-sm"
+              className="h-full"
             />
           </div>
         </div>
@@ -121,6 +125,51 @@ export default function MainLayout({
                 ))}              </div>
             </div>
 
+            
+
+            {/* Download Button */}
+            <Button
+              onClick={recordAndDownload}
+              disabled={!isFFmpegReady || isProcessing}
+              className="w-full"
+              variant={!isFFmpegReady || isProcessing ? "secondary" : "default"}
+            >
+              {!isFFmpegReady
+                ? "Подготовка FFmpeg..."
+                : isProcessing
+                ? "Обработка..."
+                : "Записать и скачать"}
+            </Button>
+
+{/* Sale Fields */}
+            <div className="space-y-2">
+              {saleFields.map((field) => (
+                <div key={field.id} className="flex flex-col space-y-1">
+                  <label 
+                    htmlFor={field.id} 
+                    className={cn("text-sm font-medium", {
+                      "opacity-50": field.id === "GAS SALE" && !isGasOn
+                    })}
+                  >
+                    {field.label}
+                  </label>
+                  <input
+                    type="text"
+                    id={field.id}
+                    value={getFieldValue(field.id)}
+                    onChange={(e) => onInputChange(e, field.id)}
+                    disabled={field.id === "GAS SALE" && !isGasOn}
+                    className={cn(
+                      "rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring",
+                      {
+                        "opacity-50 cursor-not-allowed": field.id === "GAS SALE" && !isGasOn
+                      }
+                    )}
+                  />
+                </div>
+              ))}
+            </div>
+
             {/* Coffee Input */}
             <div className="space-y-2">
               <div className="flex flex-col space-y-1">
@@ -147,18 +196,6 @@ export default function MainLayout({
                 />
               </div>
             </div>
-
-            {/* Download Button */}
-            {isFFmpegReady && (
-              <Button
-                onClick={recordAndDownload}
-                disabled={isProcessing}
-                className="w-full"
-                variant={isProcessing ? "secondary" : "default"}
-              >
-                {isProcessing ? "Обработка..." : "Записать и скачать"}
-              </Button>
-            )}
 
             {/* Arrow Direction Toggle */}
             <div className="flex items-center justify-center">
@@ -203,26 +240,36 @@ export default function MainLayout({
         )}
 
         {/* Logs Section */}
-        {logs.length > 0 && (
-          <div className="space-y-2">
-            <h3 className="text-lg font-semibold">Журнал операций:</h3>
-            <div className="max-h-40 overflow-y-auto rounded-md border bg-muted p-4">
-              <pre className="text-sm">
-                {logs.map((log, index) => (
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold">Журнал операций:</h3>
+          <div className="max-h-40 overflow-y-auto rounded-md border bg-muted p-4">
+            <pre className="text-sm">
+              {logs.length === 0 ? (
+                <div className="text-muted-foreground">Ожидание событий…</div>
+              ) : (
+                logs.map((log, index) => (
                   <div
                     key={index}
                     className={cn("py-1", {
-                      "text-red-500": log.includes("error"),
-                      "text-green-500": log.includes("success"),
+                      "text-red-500": log.toLowerCase().includes("ошибка") || log.toLowerCase().includes("error"),
+                      "text-green-500": log.toLowerCase().includes("готово") || log.toLowerCase().includes("success"),
                     })}
                   >
                     {parseLog(log)}
                   </div>
-                ))}
-              </pre>
-            </div>
+                ))
+              )}
+            </pre>
           </div>
-        )}
+        </div>
+      </div>
+      <div className="mt-2 flex justify-center">
+        <Button asChild variant="link" className="text-muted-foreground text-xs flex items-center gap-1">
+          <a href="https://kashakov.art/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1">
+            Made by Kashakov
+            <img src="/kashakov_logo.svg" alt="icon" className="w-4 h-4 inline-block align-middle" />
+          </a>
+        </Button>
       </div>
     </div>
   );
