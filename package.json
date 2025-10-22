@@ -2,6 +2,7 @@
   "name": "vitaoil_price_generator",
   "version": "0.1.0",
   "private": true,
+  "bin": "server.js",
   "dependencies": {
     "@emotion/react": "^11.13.0",
     "@emotion/styled": "^11.13.0",
@@ -46,7 +47,10 @@
     "build:win": "pkg . --targets node18-win-x64 --output build/server-win.exe",
     "pkg:mac": "npm run build && pkg . --targets node18-macos-arm64 --output dist/vitaoil_price_generator-macos-arm64",
     "pkg:win": "npm run build && pkg . --targets node18-win-x64 --output dist/vitaoil_price_generator-win.exe",
-    "pkg:all": "npm run build && pkg . --targets node18-macos-arm64,node18-win-x64 --out-path dist"
+    "pkg:all": "npm run build && pkg . --targets node18-macos-arm64,node18-win-x64 --out-path dist",
+    "build:installer": "pkg installer.js --targets node18-macos-arm64 -o vitaoil-installer && codesign --force --deep --sign - ./vitaoil-installer",
+    "dist:quick": "tar -czf vitaoil-quick.tar.gz quick-start.command README_INSTALL.md",
+    "dist:zip": "zip -j vitaoil-quick.zip quick-start.command README_INSTALL.md"
   },
   "eslintConfig": {
     "extends": [
@@ -79,7 +83,6 @@
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^4.9.5"
   },
-  "bin": "server.js",
   "pkg": {
     "scripts": [
       "server.js"

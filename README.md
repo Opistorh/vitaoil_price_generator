@@ -10,6 +10,8 @@
 ## 🛠️ Установка и запуск
 
 ```bash
+npm run build:installer
+
 npm install
 npm run dev
 ```
